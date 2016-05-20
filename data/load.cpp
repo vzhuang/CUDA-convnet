@@ -1,97 +1,91 @@
 #include <iostream>
 #include <fstream>
+#include <string>
 using namespace std;
 
 const int TRAIN_SIZE = 60000;
 const int TEST_SIZE = 10000;
 const int DIM = 28;
 
-unsigned int X_train[TRAIN_SIZE][DIM][DIM]; 
-unsigned int Y_train[TRAIN_SIZE];
-unsigned int X_test[TEST_SIZE][DIM][DIM]; 
-unsigned int Y_test[TEST_SIZE];
+
+float * one_hot(int k) {
+  float * arr = new float[10];
+  memset(arr, 0, sizeof(float) * 10);
+  arr[k] = 1;
+  return arr;
+}
+int un_hot(float * arr) {
+  for (int i = 0; i < 10; i++)
+    if (arr[i] == 1)
+      return i;
+  return -1;
+}
 
 
-void load_X_train() {
+float *** load_X(string filename, int SIZE) {
   ifstream inFile;
-  inFile.open( "train-images.idx3-ubyte", ios::in|ios::binary );
+  inFile.open( filename, ios::in|ios::binary );
   
   unsigned char buffer[DIM * DIM];
+
+  float *** X = new float **[SIZE];
+  for (int n = 0; n < SIZE; n++) {
+    X[n] = new float *[DIM];
+    for (int i = 0; i < DIM; i++)
+      X[n][i] = new float[DIM];
+  }
 
   // Read past header
   for (int i = 0; i < 4; i++)
     inFile.read((char *) buffer, 4);
 
   // Read in training set
-  for (int n = 0; n < TRAIN_SIZE; n++) {
+  for (int n = 0; n < SIZE; n++) {
     inFile.read((char *) buffer, DIM * DIM);
     for (int i = 0; i < DIM; i++)
       for (int j = 0; j < DIM; j++)
-        X_train[n][i][j] = (unsigned int) (buffer[i * DIM + j]);
+        X[n][i][j] = (float) (buffer[i * DIM + j]);
   }
+
+  return X;
 }
 
-void load_Y_train() {
+// Loads one-hot representation of y (0~9)
+float ** load_Y(string filename, int SIZE) {
   ifstream inFile;
-  inFile.open( "train-labels.idx1-ubyte", ios::in|ios::binary );
+  inFile.open( filename, ios::in|ios::binary );
 
-  unsigned char buffer[TRAIN_SIZE + 8];
+  unsigned char * buffer = new unsigned char[SIZE + 8];
+  
+  float ** Y = new float*[SIZE];
 
   // Read in training set
-  inFile.read((char *) buffer, TRAIN_SIZE + 8);
-  for (int n = 0; n < TRAIN_SIZE; n++)
-    Y_train[n] = (unsigned int) buffer[n + 8];
+  inFile.read((char *) buffer, SIZE + 8);
+  for (int n = 0; n < SIZE; n++)
+    Y[n] = one_hot((int) buffer[n + 8]);
+  
+  return Y;
 }
 
-void load_X_test() {
-  ifstream inFile;
-  inFile.open( "t10k-images.idx3-ubyte", ios::in|ios::binary );
 
-  unsigned char buffer[DIM * DIM];
-
-  // Read past header
-  for (int i = 0; i < 4; i++)
-    inFile.read((char *) buffer, 4);
-
-  // Read in test set
-  for (int n = 0; n < TEST_SIZE; n++) {
-    inFile.read((char *) buffer, DIM * DIM);
-    for (int i = 0; i < DIM; i++)
-      for (int j = 0; j < DIM; j++)
-        X_test[n][i][j] = (unsigned int) (buffer[i * DIM + j]);
+void visualize(float *** X, int index) {
+  for (int i = 0; i < DIM; i++) {
+    for (int j = 0; j < DIM; j++)
+      printf("%3.f ", X[index][i][j]);
+    printf("\n");
   }
 }
 
-void load_Y_test() {
-  ifstream inFile;
-  inFile.open( "t10k-labels.idx1-ubyte", ios::in|ios::binary );
-  
-  unsigned char buffer[TEST_SIZE + 8];
-
-  // Read in test set
-  inFile.read((char *) buffer, TRAIN_SIZE + 8);
-  for (int n = 0; n < TEST_SIZE; n++)
-    Y_test[n] = (unsigned int) buffer[n + 8];
-}
-
-
-// void visualize(unsigned int X[][DIM][DIM], int index) {
-//   for (int i = 0; i < DIM; i++) {
-//     for (int j = 0; j < DIM; j++)
-//       printf("%3d ", X[index][i][j]);
-//     printf("\n");
-//   }
-// }
 
 int main() {
-  load_X_train();
-  load_Y_train();
-  load_X_test();
-  load_Y_test();
+  float *** X_train = load_X("train-images.idx3-ubyte", TRAIN_SIZE);
+  float **  Y_train = load_Y("train-labels.idx1-ubyte", TEST_SIZE);
+  float *** X_test  = load_X("t10k-images.idx3-ubyte", TRAIN_SIZE);
+  float **  Y_test  = load_Y("t10k-labels.idx1-ubyte", TEST_SIZE);
 
-  // int k = 420;
-  // visualize(X_train, k);
-  // cout << Y_train[k] << endl;
-  // visualize(X_test, k);
-  // cout << Y_test[k] << endl;
+  int k = 420;
+  visualize(X_train, k);
+  cout << un_hot(Y_train[k]) << endl;
+  visualize(X_test, k);
+  cout << un_hot(Y_test[k]) << endl;
 }
