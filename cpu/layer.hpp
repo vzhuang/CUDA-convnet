@@ -1,7 +1,17 @@
-class Layer {
-	virtual void forward_prop();
-	virtual void back_prop();
+struct Dimensions {
+  int dimX, dimY, dimZ;
 };
+
+
+
+class Layer {
+public:
+	virtual void forward_prop(float *** input, Dimensions * input_dimensions,
+			float *** output, Dimensions * output_dimensions) = 0;
+	virtual void back_prop() = 0;
+};
+
+
 
 /**
  * Implement zero-padded convolutions!
@@ -15,39 +25,49 @@ public:
 	float *** weights;
 	float * biases;
 	
-	void ConvLayer(int num_filters_, int size_, int stride_);
-	void forward_prop();
+	ConvLayer(int num_filters_, int size_, int stride_);
+	void forward_prop(float *** input, Dimensions * input_dimensions,
+			float *** output, Dimensions * output_dimensions);
 	void back_prop();
 };
+
+
 
 class ActivationLayer : public Layer {
 
 public:	
 	// activation types - ReLU, tanh, sigmoid?
-	void ActivationLayer();
-	void forward_prop();
+	ActivationLayer();
+	void forward_prop(float *** input, Dimensions * input_dimensions,
+			float *** output, Dimensions * output_dimensions);
 	void back_prop();
 };
+
+
 
 class PoolingLayer : public Layer {
 	int pool_size;	
 
 public:	
 
-	void PoolingLayer(int size_);
-	void forward_prop();
+	PoolingLayer(int size_);
+	void forward_prop(float *** input, Dimensions * input_dimensions,
+			float *** output, Dimensions * output_dimensions);
 	void back_prop();
 };
 
-class FullyConnectedLayer : public Layer {
-	int num_neurons;
+
+
+// class FullyConnectedLayer : public Layer {
+// 	int num_neurons;
 	
-public:
-	float ** weights;
+// public:
+// 	float ** weights;
 
-	void FullyConnectedLayer();
-	void forward_prop();
-	void back_prop();
-	// flatten inputs
-	float * flatten(); 
-};
+// 	FullyConnectedLayer();
+// 	void forward_prop(float *** input, Dimensions * input_dimensions,
+// 			float *** output, Dimensions * output_dimensions);
+// 	void back_prop();
+// 	// flatten inputs
+// 	float * flatten(); 
+// };
