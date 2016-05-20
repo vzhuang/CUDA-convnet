@@ -1,11 +1,7 @@
+#include "load.hpp"
+
 #include <iostream>
 #include <fstream>
-#include <string>
-using namespace std;
-
-const int TRAIN_SIZE = 60000;
-const int TEST_SIZE = 10000;
-const int DIM = 28;
 
 
 float * one_hot(int k) {
@@ -22,9 +18,9 @@ int un_hot(float * arr) {
 }
 
 
-float *** load_X(string filename, int SIZE) {
-  ifstream inFile;
-  inFile.open( filename, ios::in|ios::binary );
+float *** load_X(std::string filename, int SIZE) {
+  std::ifstream inFile;
+  inFile.open( filename, std::ios::in|std::ios::binary );
   
   unsigned char buffer[DIM * DIM];
 
@@ -51,9 +47,9 @@ float *** load_X(string filename, int SIZE) {
 }
 
 // Loads one-hot representation of y (0~9)
-float ** load_Y(string filename, int SIZE) {
-  ifstream inFile;
-  inFile.open( filename, ios::in|ios::binary );
+float ** load_Y(std::string filename, int SIZE) {
+  std::ifstream inFile;
+  inFile.open( filename, std::ios::in|std::ios::binary );
 
   unsigned char * buffer = new unsigned char[SIZE + 8];
   
@@ -76,16 +72,10 @@ void visualize(float *** X, int index) {
   }
 }
 
-
-int main() {
-  float *** X_train = load_X("train-images.idx3-ubyte", TRAIN_SIZE);
-  float **  Y_train = load_Y("train-labels.idx1-ubyte", TEST_SIZE);
-  float *** X_test  = load_X("t10k-images.idx3-ubyte", TRAIN_SIZE);
-  float **  Y_test  = load_Y("t10k-labels.idx1-ubyte", TEST_SIZE);
-
-  int k = 420;
-  visualize(X_train, k);
-  cout << un_hot(Y_train[k]) << endl;
-  visualize(X_test, k);
-  cout << un_hot(Y_test[k]) << endl;
+void visualize2(float *** X, int index) {
+  for (int i = 0; i < DIM; i++) {
+    for (int j = 0; j < DIM; j++)
+      printf("%0.3f ", X[index][i][j]);
+    printf("\n");
+  }
 }

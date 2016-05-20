@@ -1,5 +1,9 @@
 #include "layer.hpp"
 
+#include <math.h>
+
+
+
 ConvLayer::ConvLayer(int num_filters_, int size_, int stride_) {
 	num_filters = num_filters_;
 	size = size_;
@@ -15,13 +19,17 @@ ConvLayer::ConvLayer(int num_filters_, int size_, int stride_) {
 		
 }
 
-ConvLayer::forward_prop() {
+void ConvLayer::forward_prop(float *** input, Dimensions * input_dimensions,
+			float *** output, Dimensions * output_dimensions) 
+{
 	
 }
 
-ConvLayer::back_prop() {
+void ConvLayer::back_prop() {
 	
 }
+
+
 
 /**
  * Stick to sigmoid for now
@@ -30,27 +38,49 @@ ActivationLayer::ActivationLayer() {
 	
 }
 
-ActivationLayer::forward_prop() {
+void ActivationLayer::forward_prop(float *** input, Dimensions * input_dimensions,
+			float *** output, Dimensions * output_dimensions) 
+{
+	int dimX = input_dimensions->dimX;
+	int dimY = input_dimensions->dimY;
+	int dimZ = input_dimensions->dimZ;
+
+	for (int i = 0; i < dimX; i++) {
+		for (int j = 0; j < dimY; j++) {
+			for (int k = 0; k < dimZ; k++) {
+				output[i][j][k] = 1.0 / (1.0 + exp(-input[i][j][k]));
+			}
+		}
+	}
+
+	output_dimensions->dimX = dimX;
+	output_dimensions->dimY = dimY;
+	output_dimensions->dimZ = dimZ;
+}
+
+void ActivationLayer::back_prop() {
 	
 }
 
-ActivationLayer::back_prop() {
-	
-}
+
 
 /**
  * Max pooling of size by size region
  */
 PoolingLayer::PoolingLayer(int size_) {
-	size = size_;
+	int size = size_;
 }
 
 
-PoolingLayer::forward_prop() {
+void PoolingLayer::forward_prop(float *** input, Dimensions * input_dimensions,
+			float *** output, Dimensions * output_dimensions) 
+{
 	
 }
 
-PoolingLayer::back_prop() {
+void PoolingLayer::back_prop() {
 	
 }
+
+
 
