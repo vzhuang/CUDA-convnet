@@ -6,9 +6,9 @@ struct Dimensions {
 
 class Layer {
 public:
-	virtual void forward_prop(float *** input, Dimensions * input_dimensions,
-			float *** output, Dimensions * output_dimensions) = 0;
-	virtual void back_prop() = 0;
+  virtual void forward_prop(float *** input, Dimensions * input_dimensions,
+      float *** output, Dimensions * output_dimensions) = 0;
+  virtual void back_prop() = 0;
 };
 
 
@@ -17,57 +17,55 @@ public:
  * Implement zero-padded convolutions!
  */ 
 class ConvLayer : public Layer {
-	int stride;
-	int size; // conv filter size
-	int num_filters; // number of filters
-
-public:	
-	float *** weights;
-	float * biases;
-	
-	ConvLayer(int num_filters_, int size_, int stride_);
-	void forward_prop(float *** input, Dimensions * input_dimensions,
-			float *** output, Dimensions * output_dimensions);
-	void back_prop();
+public: 
+  int stride;
+  int size; // conv filter size
+  int num_filters; // number of filters
+  float *** weights;
+  float * biases;
+  
+  ConvLayer(int num_filters_, int size_, int stride_);
+  void forward_prop(float *** input, Dimensions * input_dimensions,
+      float *** output, Dimensions * output_dimensions);
+  void back_prop();
 };
 
 
 
 class ActivationLayer : public Layer {
 
-public:	
-	// activation types - ReLU, tanh, sigmoid?
-	ActivationLayer();
-	void forward_prop(float *** input, Dimensions * input_dimensions,
-			float *** output, Dimensions * output_dimensions);
-	void back_prop();
+public: 
+  // activation types - ReLU, tanh, sigmoid?
+  ActivationLayer();
+  void forward_prop(float *** input, Dimensions * input_dimensions,
+      float *** output, Dimensions * output_dimensions);
+  void back_prop();
 };
 
 
 
 class PoolingLayer : public Layer {
-	int pool_size;	
+public: 
+  int pool_size;
 
-public:	
-
-	PoolingLayer(int size_);
-	void forward_prop(float *** input, Dimensions * input_dimensions,
-			float *** output, Dimensions * output_dimensions);
-	void back_prop();
+  PoolingLayer(int size_);
+  void forward_prop(float *** input, Dimensions * input_dimensions,
+      float *** output, Dimensions * output_dimensions);
+  void back_prop();
 };
 
 
 
 // class FullyConnectedLayer : public Layer {
-// 	int num_neurons;
-	
+//  int num_neurons;
+  
 // public:
-// 	float ** weights;
+//  float ** weights;
 
-// 	FullyConnectedLayer();
-// 	void forward_prop(float *** input, Dimensions * input_dimensions,
-// 			float *** output, Dimensions * output_dimensions);
-// 	void back_prop();
-// 	// flatten inputs
-// 	float * flatten(); 
+//  FullyConnectedLayer();
+//  void forward_prop(float *** input, Dimensions * input_dimensions,
+//      float *** output, Dimensions * output_dimensions);
+//  void back_prop();
+//  // flatten inputs
+//  float * flatten(); 
 // };

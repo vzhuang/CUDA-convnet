@@ -18,12 +18,17 @@ int main() {
   std::cout << un_hot(Y_test[k]) << std::endl;
 
 
-  ActivationLayer layer;
   Dimensions d = {1, DIM, DIM};
 
-  layer.forward_prop(X_train, &d, X_test, &d);
+  // ActivationLayer layer;
+  // layer.forward_prop(X_train, &d, X_test, &d);
+  // visualize2(X_test, k);
+  // std::cout << d.dimX << " " << d.dimY << " "  << d.dimZ << std::endl;
 
-  visualize2(X_test, k);
+  PoolingLayer layer2(2);
+  layer2.forward_prop(X_test, &d, X_train, &d);
+  visualize(X_train, k);
+  std::cout << d.dimX << " " << d.dimY << " "  << d.dimZ << std::endl;
 }
 
 
