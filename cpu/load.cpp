@@ -18,17 +18,18 @@ int un_hot(float * arr) {
 }
 
 
-float *** load_X(std::string filename, int SIZE) {
+float **** load_X(std::string filename, int SIZE) {
   std::ifstream inFile;
   inFile.open( filename, std::ios::in|std::ios::binary );
   
   unsigned char buffer[DIM * DIM];
 
-  float *** X = new float **[SIZE];
+  float **** X = new float ***[SIZE];
   for (int n = 0; n < SIZE; n++) {
-    X[n] = new float *[DIM];
+    X[n] = new float **[1];
+    X[n][0] = new float *[DIM];
     for (int i = 0; i < DIM; i++)
-      X[n][i] = new float[DIM];
+      X[n][0][i] = new float[DIM];
   }
 
   // Read past header
@@ -40,7 +41,7 @@ float *** load_X(std::string filename, int SIZE) {
     inFile.read((char *) buffer, DIM * DIM);
     for (int i = 0; i < DIM; i++)
       for (int j = 0; j < DIM; j++)
-        X[n][i][j] = (float) (buffer[i * DIM + j]);
+        X[n][0][i][j] = (float) (buffer[i * DIM + j]);
   }
 
   return X;
@@ -64,18 +65,18 @@ float ** load_Y(std::string filename, int SIZE) {
 }
 
 
-void visualize(float *** X, int index) {
+void visualize(float **** X, int index) {
   for (int i = 0; i < DIM; i++) {
     for (int j = 0; j < DIM; j++)
-      printf("%3.f ", X[index][i][j]);
+      printf("%3.f ", X[index][0][i][j]);
     printf("\n");
   }
 }
 
-void visualize2(float *** X, int index) {
+void visualize2(float **** X, int index) {
   for (int i = 0; i < DIM; i++) {
     for (int j = 0; j < DIM; j++)
-      printf("%0.3f ", X[index][i][j]);
+      printf("%0.3f ", X[index][0][i][j]);
     printf("\n");
   }
 }

@@ -1,13 +1,13 @@
 struct Dimensions {
-  int dimX, dimY, dimZ;
+  int num_images, num_channels, dimX, dimY;
 };
 
 
 
 class Layer {
 public:
-  virtual void forward_prop(float *** input, Dimensions * input_dimensions,
-      float *** output, Dimensions * output_dimensions) = 0;
+  virtual void forward_prop(float **** input, Dimensions * input_dimensions,
+      float **** output, Dimensions * output_dimensions) = 0;
   virtual void back_prop() = 0;
 };
 
@@ -25,8 +25,8 @@ public:
   float * biases;
   
   ConvLayer(int num_filters_, int size_, int stride_);
-  void forward_prop(float *** input, Dimensions * input_dimensions,
-      float *** output, Dimensions * output_dimensions);
+  void forward_prop(float **** input, Dimensions * input_dimensions,
+      float **** output, Dimensions * output_dimensions);
   void back_prop();
 };
 
@@ -37,8 +37,8 @@ class ActivationLayer : public Layer {
 public: 
   // activation types - ReLU, tanh, sigmoid?
   ActivationLayer();
-  void forward_prop(float *** input, Dimensions * input_dimensions,
-      float *** output, Dimensions * output_dimensions);
+  void forward_prop(float **** input, Dimensions * input_dimensions,
+      float **** output, Dimensions * output_dimensions);
   void back_prop();
 };
 
@@ -50,8 +50,8 @@ public:
   int stride;
 
   PoolingLayer(int pool_size_, int stride_);
-  void forward_prop(float *** input, Dimensions * input_dimensions,
-      float *** output, Dimensions * output_dimensions);
+  void forward_prop(float **** input, Dimensions * input_dimensions,
+      float **** output, Dimensions * output_dimensions);
   void back_prop();
 };
 
@@ -64,8 +64,8 @@ public:
 //  float ** weights;
 
 //  FullyConnectedLayer();
-//  void forward_prop(float *** input, Dimensions * input_dimensions,
-//      float *** output, Dimensions * output_dimensions);
+//  void forward_prop(float **** input, Dimensions * input_dimensions,
+//      float **** output, Dimensions * output_dimensions);
 //  void back_prop();
 //  // flatten inputs
 //  float * flatten(); 

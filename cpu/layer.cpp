@@ -16,35 +16,58 @@ ConvLayer::ConvLayer(int num_filters_, int size_, int stride_) {
   size = size_;
   stride = stride_;
   weights = new float **[num_filters];
-  for (int i = 0; i < num_filters; i++) {
-    weights[i] = new float *[size];
-    for (int j = 0; j < size; j++) {
-      weights[i][j] = new float[size];
-    }
+  for (int f = 0; f < num_filters; f++) {
+    weights[f] = new float *[size];
+    for (int i = 0; i < size; i++)
+      weights[f][i] = new float[size];
   }
   biases = new float[num_filters];
-    
+  
+  // Initialization
+  for (int f = 0; f < num_filters; f++) 
+    for (int i = 0; i < size; i++)
+      for (int j = 0; j < size; j++)
+        weights[f][i][j] = 0.1;
+  for (int f = 0; f < num_filters; f++)
+    biases[f] = 1.0;
 }
 
-void ConvLayer::forward_prop(float *** input, Dimensions * input_dimensions,
-      float *** output, Dimensions * output_dimensions)
+void ConvLayer::forward_prop(float **** input, Dimensions * input_dimensions,
+      float **** output, Dimensions * output_dimensions)
 {
+  int num_images = input_dimensions->num_images;
+  int num_channels = input_dimensions->num_channels;
   int dimX = input_dimensions->dimX;
   int dimY = input_dimensions->dimY;
-  int dimZ = input_dimensions->dimZ;
 
-  int out_dimX = dimX * num_filters;
+  int out_num_images = num_images;
+  int out_num_channels = num_filters;
+  int out_dimX = (dimX - size) / stride + 1;
   int out_dimY = (dimY - size) / stride + 1;
-  int out_dimZ = (dimZ - size) / stride + 1;
 
+  for (int n = 0; n < out_num_images; n++)
+    for (int f = 0; f < out_num_channels; f++)
+      for (int i = 0; i < out_dimX; i++) {
+        int min_i = i * stride;
+        int max_i = std::min(min_i + size, dimX);
+        for (int j = 0; j < out_dimY; j++) {
+          int min_j = j * stride;
+          int max_j = std::min(min_j + size, dimY);
 
-  // TODO
-
-
+          // Apply convolution
+          float value = biases[f];
+          for (int c = 0; c < num_channels; c++)
+            for (int i2 = min_i; i2 < max_i; i2++)
+              for (int j2 = min_j; j2 < max_j; j2++)
+                value += input[n][c][i2][j2] * weights[f][i2 - min_i][j2 - min_j];
+          output[n][f][i][j] = value;
+        }
+      }
   
+  output_dimensions->num_images = out_num_images;
+  output_dimensions->num_channels = out_num_channels; 
   output_dimensions->dimX = out_dimX;
-  output_dimensions->dimY = out_dimY;
-  output_dimensions->dimZ = out_dimZ;  
+  output_dimensions->dimY = out_dimY; 
 }
 
 void ConvLayer::back_prop() {
@@ -60,21 +83,24 @@ ActivationLayer::ActivationLayer() {
   
 }
 
-void ActivationLayer::forward_prop(float *** input, Dimensions * input_dimensions,
-      float *** output, Dimensions * output_dimensions)
+void ActivationLayer::forward_prop(float **** input, Dimensions * input_dimensions,
+      float **** output, Dimensions * output_dimensions)
 {
+  int num_images = input_dimensions->num_images;
+  int num_channels = input_dimensions->num_channels;
   int dimX = input_dimensions->dimX;
   int dimY = input_dimensions->dimY;
-  int dimZ = input_dimensions->dimZ;
 
-  for (int i = 0; i < dimX; i++)
-    for (int j = 0; j < dimY; j++)
-      for (int k = 0; k < dimZ; k++)
-        output[i][j][k] = 1.0 / (1.0 + exp(-input[i][j][k]));
+  for (int n = 0; n < num_images; n++)
+    for (int c = 0; c < num_channels; c++)
+      for (int i = 0; i < dimX; i++)
+        for (int j = 0; j < dimY; j++)
+          output[n][c][i][j] = 1.0 / (1.0 + exp(-input[n][c][i][j]));
 
+  output_dimensions->num_images = num_images;
+  output_dimensions->num_channels = num_channels; 
   output_dimensions->dimX = dimX;
-  output_dimensions->dimY = dimY;
-  output_dimensions->dimZ = dimZ;
+  output_dimensions->dimY = dimY; 
 }
 
 void ActivationLayer::back_prop() {
@@ -92,38 +118,42 @@ PoolingLayer::PoolingLayer(int pool_size_, int stride_) {
 }
 
 
-void PoolingLayer::forward_prop(float *** input, Dimensions * input_dimensions,
-      float *** output, Dimensions * output_dimensions)
+void PoolingLayer::forward_prop(float **** input, Dimensions * input_dimensions,
+      float **** output, Dimensions * output_dimensions)
 {
+  int num_images = input_dimensions->num_images;
+  int num_channels = input_dimensions->num_channels;
   int dimX = input_dimensions->dimX;
   int dimY = input_dimensions->dimY;
-  int dimZ = input_dimensions->dimZ;
 
-  int out_dimX = dimX;
+  int out_num_images = num_images;
+  int out_num_channels = num_channels;
+  int out_dimX = (dimX - pool_size) / stride + 1;
   int out_dimY = (dimY - pool_size) / stride + 1;
-  int out_dimZ = (dimZ - pool_size) / stride + 1;
 
-  for (int i = 0; i < out_dimX; i++)
-    for (int j = 0; j < out_dimY; j++) {
-      int min_j = j * stride;
-      int max_j = std::min(min_j + pool_size, dimY);
-      for (int k = 0; k < out_dimZ; k++) {
-        int min_k = k * stride;
-        int max_k = std::min(min_k + pool_size, dimZ);
+  for (int n = 0; n < out_num_images; n++)
+    for (int c = 0; c < out_num_channels; c++)
+      for (int i = 0; i < out_dimX; i++) {
+        int min_i = i * stride;
+        int max_i = std::min(min_i + pool_size, dimX);
+        for (int j = 0; j < out_dimY; j++) {
+          int min_j = j * stride;
+          int max_j = std::min(min_j + pool_size, dimY);
 
-        // Find max value over the pooling area
-        float max_value = -FLT_MAX;
-        for (int j2 = min_j; j2 < max_j; j2++)
-          for (int k2 = min_k; k2 < max_k; k2++)
-            if (input[i][j2][k2] > max_value)
-              max_value = input[i][j2][k2];
-        output[i][j][k] = max_value;
+          // Find max value over the pooling area
+          float max_value = -FLT_MAX;
+          for (int i2 = min_i; i2 < max_i; i2++)
+            for (int j2 = min_j; j2 < max_j; j2++)
+              if (input[n][c][i2][j2] > max_value)
+                max_value = input[n][c][i2][j2];
+          output[n][c][i][j] = max_value;
+        }
       }
-    }
-
+  
+  output_dimensions->num_images = out_num_images;
+  output_dimensions->num_channels = out_num_channels; 
   output_dimensions->dimX = out_dimX;
-  output_dimensions->dimY = out_dimY;
-  output_dimensions->dimZ = out_dimZ;  
+  output_dimensions->dimY = out_dimY; 
 }
 
 void PoolingLayer::back_prop() {
