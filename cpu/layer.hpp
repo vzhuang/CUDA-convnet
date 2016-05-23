@@ -47,8 +47,9 @@ public:
 class PoolingLayer : public Layer {
 public: 
   int pool_size;
+  int stride;
 
-  PoolingLayer(int size_);
+  PoolingLayer(int pool_size_, int stride_);
   void forward_prop(float *** input, Dimensions * input_dimensions,
       float *** output, Dimensions * output_dimensions);
   void back_prop();
