@@ -70,6 +70,20 @@ void ConvLayer::back_prop(float **** input_grad,
   
 }
 
+void ConvLayer::output_dim(Dimensions * input_dimensions, 
+      Dimensions * output_dimensions)
+{
+  int num_images = input_dimensions->num_images;
+  int num_channels = input_dimensions->num_channels;
+  int dimX = input_dimensions->dimX;
+  int dimY = input_dimensions->dimY;
+
+  output_dimensions->num_images = num_images;
+  output_dimensions->num_channels = num_filters;
+  output_dimensions->dimX = (dimX - size) / stride + 1;
+  output_dimensions->dimY = (dimY - size) / stride + 1;
+}
+
 
 
 /**
@@ -118,6 +132,15 @@ void ActivationLayer::back_prop(float **** input_grad,
   input_dimensions->num_channels = num_channels; 
   input_dimensions->dimX = dimX;
   input_dimensions->dimY = dimY;
+}
+
+void ActivationLayer::output_dim(Dimensions * input_dimensions, 
+      Dimensions * output_dimensions)
+{
+  output_dimensions->num_images = input_dimensions->num_images;
+  output_dimensions->num_channels = input_dimensions->num_channels;
+  output_dimensions->dimX = input_dimensions->dimX;
+  output_dimensions->dimY = input_dimensions->dimY;
 }
 
 
@@ -211,6 +234,20 @@ void PoolingLayer::back_prop(float **** input_grad,
   input_dimensions->dimY = input_dimY;
 }
 
+void PoolingLayer::output_dim(Dimensions * input_dimensions, 
+      Dimensions * output_dimensions)
+{
+  int num_images = input_dimensions->num_images;
+  int num_channels = input_dimensions->num_channels;
+  int dimX = input_dimensions->dimX;
+  int dimY = input_dimensions->dimY;
+
+  output_dimensions->num_images = num_images;
+  output_dimensions->num_channels = num_channels;
+  output_dimensions->dimX = (dimX - pool_size) / stride + 1;
+  output_dimensions->dimY = (dimY - pool_size) / stride + 1;
+}
+
 
 
 /**
@@ -267,6 +304,12 @@ void FullyConnectedLayer::back_prop(float **** input_grad,
             Dimensions * output_dimensions) 
 {
   
+}
+
+void FullyConnectedLayer::output_dim(Dimensions * input_dimensions, 
+      Dimensions * output_dimensions)
+{
+
 }
 
 void FullyConnectedLayer::flatten(Tensor * input, Tensor * reshaped)

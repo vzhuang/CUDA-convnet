@@ -3,7 +3,7 @@
 
 
 Tensor::Tensor() {
-  
+
 }
 
 void Tensor::init_vals(Dimensions * dims_) {
@@ -21,7 +21,7 @@ void Tensor::init_vals(Dimensions * dims_) {
         vals[i][c][x] = new float[dimY];
       }
     }
-  }  
+  }
 }
 
 void Tensor::free_vals() {
@@ -32,11 +32,11 @@ void Tensor::free_vals() {
   for (int i = 0; i < num_images; i++) {
     for (int c = 0; c < num_channels; c++) {
       for (int x = 0; x < dimX; x++) {
-        free(vals[i][c][x]);
+        delete vals[i][c][x];
       }
-      free(vals[i][c]);      
+      delete vals[i][c];
     }
-    free(vals[i]);    
+    delete vals[i];
   }
-  free(vals);
+  delete vals;
 }
