@@ -9,45 +9,6 @@
 #include <algorithm>
 
 
-Tensor::Tensor() {
-  
-}
-
-void Tensor::init_vals(Dimensions * dims_) {
-  dims = dims_;
-  int num_images = dims->num_images;
-  int num_channels = dims->num_channels;
-  int dimX = dims->dimX;
-  int dimY = dims->dimY;
-  vals = new float ***[num_images];
-  for (int i = 0; i < num_images; i++) {
-    vals[i] = new float **[num_channels];
-    for (int c = 0; c < num_channels; c++) {
-      vals[i][c] = new float *[dimX];
-      for (int x = 0; x < dimX; x++) {
-	vals[i][c][x] = new float[dimY];
-      }
-    }
-  }  
-}
-
-void Tensor::free_vals() {
-  int num_images = dims->num_images;
-  int num_channels = dims->num_channels;
-  int dimX = dims->dimX;
-  int dimY = dims->dimY;
-  for (int i = 0; i < num_images; i++) {
-    for (int c = 0; c < num_channels; c++) {
-      for (int x = 0; x < dimX; x++) {
-	free(vals[i][c][x]);
-      }
-      free(vals[i][c]);      
-    }
-    free(vals[i]);    
-  }
-  free(vals);
-}
-
 
 ConvLayer::ConvLayer(int num_filters_, int size_, int stride_) {
   num_filters = num_filters_;
@@ -59,7 +20,7 @@ ConvLayer::ConvLayer(int num_filters_, int size_, int stride_) {
     for (int i = 0; i < size; i++)
       weights[f][i] = new float[size];
   }
-  biases = new float[num_filters];	
+  biases = new float[num_filters];  
   
   // Initialization
   for (int f = 0; f < num_filters; f++) 
@@ -70,15 +31,11 @@ ConvLayer::ConvLayer(int num_filters_, int size_, int stride_) {
     biases[f] = 1.0;
 }
 
-void ConvLayer::forward_prop(float **** input,
-			     Dimensions * input_dimensions,
-			     float **** output,
-			     Dimensions * output_dimensions)
-{
-  int num_images = input_dimensions->num_images;
-  int num_channels = input_dimensions->num_channels;
-  int dimX = input_dimensions->dimX;
-  int dimY = input_dimensions->dimY;
+void ConvLayer::forward_prop(Tensor * input, Tensor * output) {
+  int num_images = input->dims->num_images;
+  int num_channels = input->dims->num_channels;
+  int dimX = input->dims->dimX;
+  int dimY = input->dims->dimY;
 
   int out_num_images = num_images;
   int out_num_channels = num_filters;
@@ -99,21 +56,16 @@ void ConvLayer::forward_prop(float **** input,
           for (int c = 0; c < num_channels; c++)
             for (int i2 = min_i; i2 < max_i; i2++)
               for (int j2 = min_j; j2 < max_j; j2++)
-                value += input[n][c][i2][j2] * weights[f][i2 - min_i][j2 - min_j];
-          output[n][f][i][j] = value;
+                value += input->vals[n][c][i2][j2] * weights[f][i2 - min_i][j2 - min_j];
+          output->vals[n][f][i][j] = value;
         }
       }
-  
-  output_dimensions->num_images = out_num_images;
-  output_dimensions->num_channels = out_num_channels; 
-  output_dimensions->dimX = out_dimX;
-  output_dimensions->dimY = out_dimY; 
 }
 
 void ConvLayer::back_prop(float **** input_grad,
-			  Dimensions * input_dimensions,
-			  float **** output_grad,
-			  Dimensions * output_dimensions) 
+        Dimensions * input_dimensions,
+        float **** output_grad,
+        Dimensions * output_dimensions) 
 {
   
 }
@@ -127,35 +79,26 @@ ActivationLayer::ActivationLayer() {
   
 }
 
-void ActivationLayer::forward_prop(float **** input,
-				   Dimensions * input_dimensions,
-				   float **** output,
-				   Dimensions * output_dimensions)
-{
-  int num_images = input_dimensions->num_images;
-  int num_channels = input_dimensions->num_channels;
-  int dimX = input_dimensions->dimX;
-  int dimY = input_dimensions->dimY;
+void ActivationLayer::forward_prop(Tensor * input, Tensor * output) {
+  int num_images = input->dims->num_images;
+  int num_channels = input->dims->num_channels;
+  int dimX = input->dims->dimX;
+  int dimY = input->dims->dimY;
 
   for (int n = 0; n < num_images; n++)
     for (int c = 0; c < num_channels; c++)
       for (int i = 0; i < dimX; i++)
         for (int j = 0; j < dimY; j++)
-          output[n][c][i][j] = 1.0 / (1.0 + exp(-input[n][c][i][j]));
-
-  output_dimensions->num_images = num_images;
-  output_dimensions->num_channels = num_channels; 
-  output_dimensions->dimX = dimX;
-  output_dimensions->dimY = dimY;
+          output->vals[n][c][i][j] = 1.0 / (1.0 + exp(-input->vals[n][c][i][j]));
 
   // Save for backprop
   last_input = input;
 }
 
 void ActivationLayer::back_prop(float **** input_grad,
-				Dimensions * input_dimensions,
-				float **** output_grad,
-				Dimensions * output_dimensions) 
+        Dimensions * input_dimensions,
+        float **** output_grad,
+        Dimensions * output_dimensions) 
 {
   int num_images = output_dimensions->num_images;
   int num_channels = output_dimensions->num_channels;
@@ -166,7 +109,7 @@ void ActivationLayer::back_prop(float **** input_grad,
     for (int c = 0; c < num_channels; c++)
       for (int i = 0; i < dimX; i++)
         for (int j = 0; j < dimY; j++) {
-          float s = 1.0 / (1.0 + exp(-last_input[n][c][i][j]));
+          float s = 1.0 / (1.0 + exp(-last_input->vals[n][c][i][j]));
           s = s * (1-s);
           input_grad[n][c][i][j] = s * output_grad[n][c][i][j];
         }
@@ -187,15 +130,11 @@ PoolingLayer::PoolingLayer(int pool_size_, int stride_) {
   stride = stride_;
 }
 
-void PoolingLayer::forward_prop(float **** input,
-				Dimensions * input_dimensions,
-				float **** output,
-				Dimensions * output_dimensions)
-{
-  int num_images = input_dimensions->num_images;
-  int num_channels = input_dimensions->num_channels;
-  int dimX = input_dimensions->dimX;
-  int dimY = input_dimensions->dimY;
+void PoolingLayer::forward_prop(Tensor * input, Tensor * output) {
+  int num_images = input->dims->num_images;
+  int num_channels = input->dims->num_channels;
+  int dimX = input->dims->dimX;
+  int dimY = input->dims->dimY;
 
   int out_num_images = num_images;
   int out_num_channels = num_channels;
@@ -203,19 +142,9 @@ void PoolingLayer::forward_prop(float **** input,
   int out_dimY = (dimY - pool_size) / stride + 1;
 
   // Init switches for use in backprop
-  switches = new int****[out_num_images];
-  for (int n = 0; n < out_num_images; n++) {
-    switches[n] = new int***[out_num_channels];
-    for (int c = 0; c < out_num_channels; c++) {
-      switches[n][c] = new int**[out_dimX];
-      for (int i = 0; i < out_dimX; i++) {
-        switches[n][c][i] = new int*[out_dimY];
-        for (int j = 0; j < out_dimY; j++) {
-          switches[n][c][i][j] = new int[2];
-        }
-      }
-    }
-  }
+  Dimensions out_dims = {out_num_images, out_num_channels, out_dimX, out_dimY};
+  switches_X.init_vals(&out_dims);
+  switches_Y.init_vals(&out_dims);
 
   for (int n = 0; n < out_num_images; n++)
     for (int c = 0; c < out_num_channels; c++)
@@ -232,27 +161,22 @@ void PoolingLayer::forward_prop(float **** input,
           int max_Y = -1;
           for (int i2 = min_i; i2 < max_i; i2++)
             for (int j2 = min_j; j2 < max_j; j2++)
-              if (input[n][c][i2][j2] > max_value) {
-                max_value = input[n][c][i2][j2];
+              if (input->vals[n][c][i2][j2] > max_value) {
+                max_value = input->vals[n][c][i2][j2];
                 max_X = i2;
                 max_Y = j2;
               }
-          output[n][c][i][j] = max_value;
-          switches[n][c][i][j][0] = max_X;
-          switches[n][c][i][j][1] = max_Y;
+          output->vals[n][c][i][j] = max_value;
+          switches_X.vals[n][c][i][j] = max_X;
+          switches_Y.vals[n][c][i][j] = max_Y;
         }
       }
-  
-  output_dimensions->num_images = out_num_images;
-  output_dimensions->num_channels = out_num_channels; 
-  output_dimensions->dimX = out_dimX;
-  output_dimensions->dimY = out_dimY; 
 }
 
 void PoolingLayer::back_prop(float **** input_grad,
-			     Dimensions * input_dimensions,
-			     float **** output_grad,
-			     Dimensions * output_dimensions) 
+           Dimensions * input_dimensions,
+           float **** output_grad,
+           Dimensions * output_dimensions) 
 {
   int num_images = output_dimensions->num_images;
   int num_channels = output_dimensions->num_channels;
@@ -277,8 +201,8 @@ void PoolingLayer::back_prop(float **** input_grad,
     for (int c = 0; c < num_channels; c++)
       for (int i = 0; i < dimX; i++)
         for (int j = 0; j < dimY; j++) {
-          int max_X = switches[n][c][i][j][0];
-          int max_Y = switches[n][c][i][j][1];
+          int max_X = switches_X.vals[n][c][i][j];
+          int max_Y = switches_Y.vals[n][c][i][j];
           input_grad[n][c][max_X][max_Y] = output_grad[n][c][i][j];
         }  
   input_dimensions->num_images = input_num_images;
@@ -301,47 +225,48 @@ FullyConnectedLayer::FullyConnectedLayer(int num_neurons_, int input_dim_) {
   }
 }
 
-void FullyConnectedLayer::forward_prop(Tensor * input,
-				       Tensor * output)
-{
+void FullyConnectedLayer::forward_prop(Tensor * input, Tensor * output) {
   // reshape input
   int num_images = input->dims->num_images;
   int num_channels = input->dims->num_channels;
   int dimX = input->dims->dimX;
   int dimY = input->dims->dimY;
-  Dimensions * reshaped_dims;
-  reshaped_dims->num_images = num_images;
-  reshaped_dims->num_channels = 1;
-  reshaped_dims->dimX = num_channels * dimX * dimY;
-  reshaped_dims->dimY = 1;
+
+  Dimensions reshaped_dims;
+  reshaped_dims.num_images = num_images;
+  reshaped_dims.num_channels = 1;
+  reshaped_dims.dimX = num_channels * dimX * dimY;
+  reshaped_dims.dimY = 1;
+
   Tensor * reshaped = new Tensor();
-  reshaped->init_vals(reshaped_dims);
+  reshaped->init_vals(&reshaped_dims);
   flatten(input, reshaped);
-  input = reshaped;
-  Dimensions * out_dims;
-  out_dims->num_images = num_images;
-  out_dims->num_channels = 1;
-  out_dims->dimX = num_neurons;
-  out_dims->dimY = 1;
-  output->init_vals(out_dims);
+  // input = reshaped;
+
+  Dimensions out_dims;
+  out_dims.num_images = num_images;
+  out_dims.num_channels = 1;
+  out_dims.dimX = num_neurons;
+  out_dims.dimY = 1;
+  output->init_vals(&out_dims);
+
   for (int i = 0; i < num_images; i++) {
     for (int n = 0; n < num_neurons; n++) {
-	float sum = 0;
-	for (int j = 0; j < reshaped_dims->dimX; j++) {
-	  sum += weights[n][j] * reshaped->vals[i][0][j][0];
-	}
-	output->vals[i][0][n][0] = sum;
+      float sum = 0;
+      for (int j = 0; j < reshaped_dims.dimX; j++) {
+        sum += weights[n][j] * reshaped->vals[i][0][j][0];
+      }
+      output->vals[i][0][n][0] = sum;
     }
   }
-  
 }
 
-void FullyConnectedLayer::back_prop(float * input_grad,
-				    Dimensions * input_dimensions,
-				    float **** output_grad,
-				    Dimensions * output_dimensions) 
+void FullyConnectedLayer::back_prop(float **** input_grad,
+            Dimensions * input_dimensions,
+            float **** output_grad,
+            Dimensions * output_dimensions) 
 {
-  return NULL;
+  
 }
 
 void FullyConnectedLayer::flatten(Tensor * input, Tensor * reshaped)
@@ -353,10 +278,10 @@ void FullyConnectedLayer::flatten(Tensor * input, Tensor * reshaped)
   for (int i = 0; i < num_images; i++) {
     for (int c = 0; c < num_channels; c++) {
       for (int x = 0; x < dimX; x++) {
-	for (int y = 0; y < dimY; y++) {
-	  int ind = c * dimX * dimY + x * dimY + y;
-	  reshaped->vals[i][0][ind][0] = input->vals[i][c][x][y];
-	}
+        for (int y = 0; y < dimY; y++) {
+          int ind = c * dimX * dimY + x * dimY + y;
+          reshaped->vals[i][0][ind][0] = input->vals[i][c][x][y];
+        }
       }
     }
   }
