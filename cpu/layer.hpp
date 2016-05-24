@@ -38,7 +38,6 @@ class ActivationLayer : public Layer {
 
   // Use for backprop
   float **** last_input;
-  Dimensions * last_input_dimensions;
 
 public: 
   // activation types - ReLU, tanh, sigmoid?
@@ -52,6 +51,11 @@ public:
 
 
 class PoolingLayer : public Layer {
+
+  // Use for backprop
+  Dimensions * last_input_dimensions;
+  int ***** switches;
+
 public: 
   int pool_size;
   int stride;

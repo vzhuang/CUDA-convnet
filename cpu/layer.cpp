@@ -106,7 +106,6 @@ void ActivationLayer::forward_prop(float **** input, Dimensions * input_dimensio
 
   // Save for backprop
   last_input = input;
-  last_input_dimensions = input_dimensions;
 }
 
 void ActivationLayer::back_prop(float **** input_grad, Dimensions * input_dimensions,
@@ -155,6 +154,21 @@ void PoolingLayer::forward_prop(float **** input, Dimensions * input_dimensions,
   int out_dimX = (dimX - pool_size) / stride + 1;
   int out_dimY = (dimY - pool_size) / stride + 1;
 
+  // Init switches for use in backprop
+  switches = new int****[out_num_images];
+  for (int n = 0; n < out_num_images; n++) {
+    switches[n] = new int***[out_num_channels];
+    for (int c = 0; c < out_num_channels; c++) {
+      switches[n][c] = new int**[out_dimX];
+      for (int i = 0; i < out_dimX; i++) {
+        switches[n][c][i] = new int*[out_dimY];
+        for (int j = 0; j < out_dimY; j++) {
+          switches[n][c][i][j] = new int[2];
+        }
+      }
+    }
+  }
+
   for (int n = 0; n < out_num_images; n++)
     for (int c = 0; c < out_num_channels; c++)
       for (int i = 0; i < out_dimX; i++) {
@@ -166,11 +180,18 @@ void PoolingLayer::forward_prop(float **** input, Dimensions * input_dimensions,
 
           // Find max value over the pooling area
           float max_value = -FLT_MAX;
+          int max_X = -1;
+          int max_Y = -1;
           for (int i2 = min_i; i2 < max_i; i2++)
             for (int j2 = min_j; j2 < max_j; j2++)
-              if (input[n][c][i2][j2] > max_value)
+              if (input[n][c][i2][j2] > max_value) {
                 max_value = input[n][c][i2][j2];
+                max_X = i2;
+                max_Y = j2;
+              }
           output[n][c][i][j] = max_value;
+          switches[n][c][i][j][0] = max_X;
+          switches[n][c][i][j][1] = max_Y;
         }
       }
   
@@ -183,7 +204,38 @@ void PoolingLayer::forward_prop(float **** input, Dimensions * input_dimensions,
 void PoolingLayer::back_prop(float **** input_grad, Dimensions * input_dimensions,
       float **** output_grad, Dimensions * output_dimensions) 
 {
-  
+  int num_images = output_dimensions->num_images;
+  int num_channels = output_dimensions->num_channels;
+  int dimX = output_dimensions->dimX;
+  int dimY = output_dimensions->dimY;
+
+  int input_num_images = last_input_dimensions->num_images;
+  int input_num_channels = last_input_dimensions->num_channels;
+  int input_dimX = last_input_dimensions->dimX;
+  int input_dimY = last_input_dimensions->dimY;
+
+  // Zero out
+  for (int n = 0; n < input_num_images; n++)
+    for (int c = 0; c < input_num_channels; c++)
+      for (int i = 0; i < input_dimX; i++)
+        for (int j = 0; j < input_dimY; j++) {
+          input_grad[n][c][i][j] = 0;
+        }
+
+  // Bprop based on switches
+  for (int n = 0; n < num_images; n++)
+    for (int c = 0; c < num_channels; c++)
+      for (int i = 0; i < dimX; i++)
+        for (int j = 0; j < dimY; j++) {
+          int max_X = switches[n][c][i][j][0];
+          int max_Y = switches[n][c][i][j][1];
+          input_grad[n][c][max_X][max_Y] = output_grad[n][c][i][j];
+        }
+
+  input_dimensions->num_images = input_num_images;
+  input_dimensions->num_channels = input_num_channels; 
+  input_dimensions->dimX = input_dimX;
+  input_dimensions->dimY = input_dimY;
 }
 
 
