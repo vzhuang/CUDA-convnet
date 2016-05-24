@@ -1,6 +1,6 @@
 #include "layer.hpp"
 #include "load.hpp"
-#include "nnet.hpp"
+#include "convnet.hpp"
 
 
 int main() {
@@ -29,7 +29,7 @@ int main() {
   
 
   // Train neural network
-  NeuralNetwork net(layers, num_layers, X_train, Y_train);
+  ConvNet net = ConvNet(layers, num_layers, X_train, Y_train);
   net.train(0.1, 2, 1);
 
   // std::cout << "wot m8" << std::endl;

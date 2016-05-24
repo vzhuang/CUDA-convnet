@@ -1,4 +1,4 @@
-#include "nnet.hpp"
+#include "convnet.hpp"
 #include "utils.hpp"
 
 #include <iostream>
