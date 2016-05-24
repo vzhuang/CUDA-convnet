@@ -7,6 +7,7 @@
 #include "utils.hpp"
 
 #include <algorithm>
+ #include <iostream>
 
 
 
@@ -160,9 +161,9 @@ void PoolingLayer::forward_prop(Tensor * input, Tensor * output) {
   int out_dimY = (dimY - pool_size) / stride + 1;
 
   // Init switches for use in backprop
-  Dimensions out_dims = {out_num_images, out_num_channels, out_dimX, out_dimY};
-  switches_X.init_vals(&out_dims);
-  switches_Y.init_vals(&out_dims);
+  Dimensions * out_dims = new Dimensions{out_num_images, out_num_channels, out_dimX, out_dimY};
+  switches_X.init_vals(out_dims);
+  switches_Y.init_vals(out_dims);
 
   for (int n = 0; n < out_num_images; n++)
     for (int c = 0; c < out_num_channels; c++)
@@ -201,14 +202,6 @@ void PoolingLayer::back_prop(Tensor * input_grad, Tensor * output_grad) {
   int input_num_channels = input_grad->dims->num_channels;
   int input_dimX = input_grad->dims->dimX;
   int input_dimY = input_grad->dims->dimY;
-
-  // Zero out
-  for (int n = 0; n < input_num_images; n++)
-    for (int c = 0; c < input_num_channels; c++)
-      for (int i = 0; i < input_dimX; i++)
-        for (int j = 0; j < input_dimY; j++) {
-          input_grad->set(n, c, i, j, 0);
-        }
 
   // Bprop based on switches
   for (int n = 0; n < num_images; n++)
@@ -264,21 +257,16 @@ void FullyConnectedLayer::forward_prop(Tensor * input, Tensor * output) {
   int dimX = input->dims->dimX;
   int dimY = input->dims->dimY;
 
-  Dimensions reshaped_dims;
-  reshaped_dims.num_images = num_images;
-  reshaped_dims.num_channels = 1;
-  reshaped_dims.dimX = num_channels * dimX * dimY;
-  reshaped_dims.dimY = 1;
-
+  Dimensions * reshaped_dims = new Dimensions{num_images, 1, num_channels * dimX * dimY, 1};
   Tensor * reshaped = new Tensor();
-  reshaped->init_vals(&reshaped_dims);
+  reshaped->init_vals(reshaped_dims);
   flatten(input, reshaped);
   // input = reshaped;
 
   for (int i = 0; i < num_images; i++) {
     for (int n = 0; n < num_neurons; n++) {
       float sum = 0;
-      for (int j = 0; j < reshaped_dims.dimX; j++) {
+      for (int j = 0; j < reshaped_dims->dimX; j++) {
         sum += weights[n][j] * reshaped->get(i, 0, j, 0);
       }
       output->set(i, 0, n, 0, sum);
@@ -286,6 +274,7 @@ void FullyConnectedLayer::forward_prop(Tensor * input, Tensor * output) {
   }
 
   reshaped->free_vals();
+  delete reshaped_dims;
   delete reshaped;
 }
 
