@@ -8,7 +8,8 @@ class Layer {
 public:
   virtual void forward_prop(float **** input, Dimensions * input_dimensions,
       float **** output, Dimensions * output_dimensions) = 0;
-  virtual void back_prop() = 0;
+  virtual void back_prop(float **** input_grad, Dimensions * input_dimensions,
+      float **** output_grad, Dimensions * output_dimensions) = 0;
 };
 
 
@@ -27,19 +28,25 @@ public:
   ConvLayer(int num_filters_, int size_, int stride_);
   void forward_prop(float **** input, Dimensions * input_dimensions,
       float **** output, Dimensions * output_dimensions);
-  void back_prop();
+  void back_prop(float **** input_grad, Dimensions * input_dimensions,
+      float **** output_grad, Dimensions * output_dimensions);
 };
 
 
 
 class ActivationLayer : public Layer {
 
+  // Use for backprop
+  float **** last_input;
+  Dimensions * last_input_dimensions;
+
 public: 
   // activation types - ReLU, tanh, sigmoid?
   ActivationLayer();
   void forward_prop(float **** input, Dimensions * input_dimensions,
       float **** output, Dimensions * output_dimensions);
-  void back_prop();
+  void back_prop(float **** input_grad, Dimensions * input_dimensions,
+      float **** output_grad, Dimensions * output_dimensions);
 };
 
 
@@ -52,21 +59,24 @@ public:
   PoolingLayer(int pool_size_, int stride_);
   void forward_prop(float **** input, Dimensions * input_dimensions,
       float **** output, Dimensions * output_dimensions);
-  void back_prop();
+  void back_prop(float **** input_grad, Dimensions * input_dimensions,
+      float **** output_grad, Dimensions * output_dimensions);
 };
 
 
 
-// class FullyConnectedLayer : public Layer {
-//  int num_neurons;
+class FullyConnectedLayer : public Layer {
+  int num_neurons;
   
-// public:
-//  float ** weights;
+public:
+  float ** weights;
 
-//  FullyConnectedLayer();
-//  void forward_prop(float **** input, Dimensions * input_dimensions,
-//      float **** output, Dimensions * output_dimensions);
-//  void back_prop();
-//  // flatten inputs
-//  float * flatten(); 
-// };
+  FullyConnectedLayer();
+  void forward_prop(float **** input, Dimensions * input_dimensions,
+      float **** output, Dimensions * output_dimensions);
+  void back_prop(float **** input_grad, Dimensions * input_dimensions,
+      float **** output_grad, Dimensions * output_dimensions);
+
+  // flatten inputs
+  float * flatten(); 
+};

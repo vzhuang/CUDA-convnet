@@ -70,7 +70,9 @@ void ConvLayer::forward_prop(float **** input, Dimensions * input_dimensions,
   output_dimensions->dimY = out_dimY; 
 }
 
-void ConvLayer::back_prop() {
+void ConvLayer::back_prop(float **** input_grad, Dimensions * input_dimensions,
+      float **** output_grad, Dimensions * output_dimensions) 
+{
   
 }
 
@@ -100,11 +102,34 @@ void ActivationLayer::forward_prop(float **** input, Dimensions * input_dimensio
   output_dimensions->num_images = num_images;
   output_dimensions->num_channels = num_channels; 
   output_dimensions->dimX = dimX;
-  output_dimensions->dimY = dimY; 
+  output_dimensions->dimY = dimY;
+
+  // Save for backprop
+  last_input = input;
+  last_input_dimensions = input_dimensions;
 }
 
-void ActivationLayer::back_prop() {
-  
+void ActivationLayer::back_prop(float **** input_grad, Dimensions * input_dimensions,
+      float **** output_grad, Dimensions * output_dimensions) 
+{
+  int num_images = output_dimensions->num_images;
+  int num_channels = output_dimensions->num_channels;
+  int dimX = output_dimensions->dimX;
+  int dimY = output_dimensions->dimY;
+
+  for (int n = 0; n < num_images; n++)
+    for (int c = 0; c < num_channels; c++)
+      for (int i = 0; i < dimX; i++)
+        for (int j = 0; j < dimY; j++) {
+          float s = 1.0 / (1.0 + exp(-last_input[n][c][i][j]));
+          s = s * (1-s);
+          input_grad[n][c][i][j] = s * output_grad[n][c][i][j];
+        }
+
+  input_dimensions->num_images = num_images;
+  input_dimensions->num_channels = num_channels; 
+  input_dimensions->dimX = dimX;
+  input_dimensions->dimY = dimY;
 }
 
 
@@ -116,7 +141,6 @@ PoolingLayer::PoolingLayer(int pool_size_, int stride_) {
   pool_size = pool_size_;
   stride = stride_;
 }
-
 
 void PoolingLayer::forward_prop(float **** input, Dimensions * input_dimensions,
       float **** output, Dimensions * output_dimensions)
@@ -156,9 +180,33 @@ void PoolingLayer::forward_prop(float **** input, Dimensions * input_dimensions,
   output_dimensions->dimY = out_dimY; 
 }
 
-void PoolingLayer::back_prop() {
+void PoolingLayer::back_prop(float **** input_grad, Dimensions * input_dimensions,
+      float **** output_grad, Dimensions * output_dimensions) 
+{
   
 }
 
 
 
+/**
+ * Idk how to implement this
+ */
+FullyConnectedLayer::FullyConnectedLayer() {
+
+}
+
+void FullyConnectedLayer::forward_prop(float **** input, Dimensions * input_dimensions,
+      float **** output, Dimensions * output_dimensions)
+{
+
+}
+
+void FullyConnectedLayer::back_prop(float **** input_grad, Dimensions * input_dimensions,
+      float **** output_grad, Dimensions * output_dimensions) 
+{
+  
+}
+
+float * FullyConnectedLayer::flatten() {
+  return NULL;
+}
