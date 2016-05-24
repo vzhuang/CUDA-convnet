@@ -4,8 +4,8 @@
  */
 
 #include "layer.hpp"
+#include "utils.hpp"
 
-#include <math.h>
 #include <algorithm>
 
 
@@ -56,8 +56,8 @@ void ConvLayer::forward_prop(Tensor * input, Tensor * output) {
           for (int c = 0; c < num_channels; c++)
             for (int i2 = min_i; i2 < max_i; i2++)
               for (int j2 = min_j; j2 < max_j; j2++)
-                value += input->vals[n][c][i2][j2] * weights[f][i2 - min_i][j2 - min_j];
-          output->vals[n][f][i][j] = value;
+                value += input->get(n, c, i2, j2) * weights[f][i2 - min_i][j2 - min_j];
+          output->set(n, f, i, j, value);
         }
       }
 }
@@ -103,7 +103,7 @@ void ActivationLayer::forward_prop(Tensor * input, Tensor * output) {
     for (int c = 0; c < num_channels; c++)
       for (int i = 0; i < dimX; i++)
         for (int j = 0; j < dimY; j++)
-          output->vals[n][c][i][j] = 1.0 / (1.0 + exp(-input->vals[n][c][i][j]));
+          output->set(n, c, i, j, sigmoid(input->get(n, c, i, j)));
 
   // Save for backprop
   last_input = input;
@@ -123,8 +123,7 @@ void ActivationLayer::back_prop(float **** input_grad,
     for (int c = 0; c < num_channels; c++)
       for (int i = 0; i < dimX; i++)
         for (int j = 0; j < dimY; j++) {
-          float s = 1.0 / (1.0 + exp(-last_input->vals[n][c][i][j]));
-          s = s * (1-s);
+          float s = sigmoid_prime(last_input->get(n, c, i, j));
           input_grad[n][c][i][j] = s * output_grad[n][c][i][j];
         }
 
@@ -184,14 +183,14 @@ void PoolingLayer::forward_prop(Tensor * input, Tensor * output) {
           int max_Y = -1;
           for (int i2 = min_i; i2 < max_i; i2++)
             for (int j2 = min_j; j2 < max_j; j2++)
-              if (input->vals[n][c][i2][j2] > max_value) {
-                max_value = input->vals[n][c][i2][j2];
+              if (input->get(n, c, i2, j2) > max_value) {
+                max_value = input->get(n, c, i2, j2);
                 max_X = i2;
                 max_Y = j2;
               }
-          output->vals[n][c][i][j] = max_value;
-          switches_X.vals[n][c][i][j] = max_X;
-          switches_Y.vals[n][c][i][j] = max_Y;
+          output->set(n, c, i, j, max_value);
+          switches_X.set(n, c, i, j, max_X);
+          switches_Y.set(n, c, i, j, max_Y);
         }
       }
 }
@@ -224,8 +223,8 @@ void PoolingLayer::back_prop(float **** input_grad,
     for (int c = 0; c < num_channels; c++)
       for (int i = 0; i < dimX; i++)
         for (int j = 0; j < dimY; j++) {
-          int max_X = switches_X.vals[n][c][i][j];
-          int max_Y = switches_Y.vals[n][c][i][j];
+          int max_X = switches_X.get(n, c, i, j);
+          int max_Y = switches_Y.get(n, c, i, j);
           input_grad[n][c][max_X][max_Y] = output_grad[n][c][i][j];
         }  
   input_dimensions->num_images = input_num_images;
@@ -260,7 +259,7 @@ FullyConnectedLayer::FullyConnectedLayer(int num_neurons_, int input_dim_) {
   for (int i = 0; i < num_neurons; i++) {
     weights[i] = new float[input_dim];
   }
-  biases = new float*[num_neurons];
+  biases = new float[num_neurons];
 }
 
 void FullyConnectedLayer::forward_prop(Tensor * input, Tensor * output) {
@@ -285,9 +284,9 @@ void FullyConnectedLayer::forward_prop(Tensor * input, Tensor * output) {
     for (int n = 0; n < num_neurons; n++) {
       float sum = 0;
       for (int j = 0; j < reshaped_dims.dimX; j++) {
-        sum += weights[n][j] * reshaped->vals[i][0][j][0];
+        sum += weights[n][j] * reshaped->get(i, 0, j, 0);
       }
-      output->vals[i][0][n][0] = sum;
+      output->set(i, 0, n, 0, sum);
     }
   }
 
@@ -330,7 +329,7 @@ void FullyConnectedLayer::flatten(Tensor * input, Tensor * reshaped)
       for (int x = 0; x < dimX; x++) {
         for (int y = 0; y < dimY; y++) {
           int ind = c * dimX * dimY + x * dimY + y;
-          reshaped->vals[i][0][ind][0] = input->vals[i][c][x][y];
+          reshaped->set(i, 0, ind, 0, input->get(i, c, x, y));
         }
       }
     }

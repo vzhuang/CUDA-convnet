@@ -1,3 +1,6 @@
+#ifndef LAYER_H
+#define LAYER_H
+
 #include "tensor.hpp"
 
 
@@ -89,3 +92,5 @@ public:
   // flatten inputs
   void flatten(Tensor * input, Tensor * reshaped); 
 };
+
+#endif

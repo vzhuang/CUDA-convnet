@@ -1,6 +1,6 @@
 #include "tensor.hpp"
 
-
+#include <iostream>
 
 Tensor::Tensor() {
 
@@ -12,31 +12,28 @@ void Tensor::init_vals(Dimensions * dims_) {
   int num_channels = dims->num_channels;
   int dimX = dims->dimX;
   int dimY = dims->dimY;
-  vals = new float ***[num_images];
-  for (int i = 0; i < num_images; i++) {
-    vals[i] = new float **[num_channels];
-    for (int c = 0; c < num_channels; c++) {
-      vals[i][c] = new float *[dimX];
-      for (int x = 0; x < dimX; x++) {
-        vals[i][c][x] = new float[dimY];
-      }
-    }
-  }
+
+  vals = new float[num_images * num_channels * dimX * dimY];
 }
 
 void Tensor::free_vals() {
+  delete vals;
+}
+
+float Tensor::get(int a, int b, int c, int d) {
   int num_images = dims->num_images;
   int num_channels = dims->num_channels;
   int dimX = dims->dimX;
   int dimY = dims->dimY;
-  for (int n = 0; n < num_images; n++) {
-    for (int c = 0; c < num_channels; c++) {
-      for (int i = 0; i < dimX; i++) {
-        delete vals[n][c][i];
-      }
-      delete vals[n][c];
-    }
-    delete vals[n];
-  }
-  delete vals;
+
+  return vals[((a * num_channels + b) * dimX + c) * dimY + d];
+}
+
+void Tensor::set(int a, int b, int c, int d, float val) {
+  int num_images = dims->num_images;
+  int num_channels = dims->num_channels;
+  int dimX = dims->dimX;
+  int dimY = dims->dimY;
+
+  vals[((a * num_channels + b) * dimX + c) * dimY + d] = val;
 }

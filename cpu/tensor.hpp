@@ -11,13 +11,15 @@ struct Dimensions {
  */
 class Tensor {
 public:
-  float **** vals;
+  float * vals;
   Dimensions * dims;
 
   // initializes to zero
   Tensor();
   void init_vals(Dimensions * dims);
-  void free_vals();    
+  void free_vals();
+  float get(int a, int b, int c, int d);              // Retrieve vals[a][b][c][d]
+  void set(int a, int b, int c, int d, float val);    // Set vals[a][b][c][d] = val
 };
 
 #endif
