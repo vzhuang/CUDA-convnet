@@ -10,10 +10,11 @@
 
 
 
-ConvLayer::ConvLayer(int num_filters_, int size_, int stride_) {
+ConvLayer::ConvLayer(int num_filters_, int size_, int stride_, int act_type) {
   num_filters = num_filters_;
   size = size_;
   stride = stride_;
+  activation = new Activation(act_type);
   weights = new float **[num_filters];
   for (int f = 0; f < num_filters; f++) {
     weights[f] = new float *[size];
@@ -84,6 +85,7 @@ void ConvLayer::output_dim(Dimensions * input_dimensions,
 
 void ConvLayer::free_layer()
 {
+  free(activation);
   for (int f = 0; f < num_filters; f++) {
     for (int i = 0; i < size; i++) {
       free(weights[f][i]);
@@ -94,13 +96,12 @@ void ConvLayer::free_layer()
   free(biases);
 }
 
-
-float ActivationLayer::ActivationLayer(int type_)
+float Activation::Activation(int type_)
 {
   type = type_;
 }
 
-float ActivationLayer::activation(float x)
+float Activation::activ(float x)
 {
   if (type == 0) { // ReLU
     if (x > 0) {
@@ -114,7 +115,7 @@ float ActivationLayer::activation(float x)
 }
 
 // for backprop-ing errors
-ActivationLayer::deriv(float x)
+Activation::deriv(float x)
 {
   if (type == 0) { // ReLU
     if (x > 0) {
@@ -128,58 +129,91 @@ ActivationLayer::deriv(float x)
   
 }
 
-void ActivationLayer::forward_prop(Tensor * input, Tensor * output)
-{
-  int num_images = input->dims->num_images;
-  int num_channels = input->dims->num_channels;
-  int dimX = input->dims->dimX;
-  int dimY = input->dims->dimY;
+// float ActivationLayer::ActivationLayer(int type_)
+// {
+//   type = type_;
+// }
 
-  for (int n = 0; n < num_images; n++)
-    for (int c = 0; c < num_channels; c++)
-      for (int i = 0; i < dimX; i++)
-        for (int j = 0; j < dimY; j++)
-          output->set(n, c, i, j, activation(input->get(n, c, i, j)));
+// float ActivationLayer::activation(float x)
+// {
+//   if (type == 0) { // ReLU
+//     if (x > 0) {
+//       return x;
+//     }
+//     return 0;
+//   }
+//   else if (type == 1) { // sigmoid
+//     return sigmoid(x);
+//   }
+// }
 
-  // Save for backprop
-  last_input = input;
-}
-
-void ActivationLayer::back_prop(Tensor * input_grad,
-				Tensor * output_grad)  
-{
-  int num_images = output_grad->dims->num_images;
-  int num_channels = output_grad->dims->num_channels;
-  int dimX = output_grad->dims->dimX;
-  int dimY = output_grad->dims->dimY;
-
-  for (int n = 0; n < num_images; n++)
-    for (int c = 0; c < num_channels; c++)
-      for (int i = 0; i < dimX; i++)
-        for (int j = 0; j < dimY; j++) {
-          float s = deriv(last_input->get(n, c, i, j));
-          input_grad[n][c][i][j] = s * output_grad[n][c][i][j];
-        }
-
-  input_dimensions->num_images = num_images;
-  input_dimensions->num_channels = num_channels; 
-  input_dimensions->dimX = dimX;
-  input_dimensions->dimY = dimY;
-}
-
-void ActivationLayer::output_dim(Dimensions * input_dimensions, 
-      Dimensions * output_dimensions)
-{
-  output_dimensions->num_images = input_dimensions->num_images;
-  output_dimensions->num_channels = input_dimensions->num_channels;
-  output_dimensions->dimX = input_dimensions->dimX;
-  output_dimensions->dimY = input_dimensions->dimY;
-}
-
-void ActivationLayer::free_layer()
-{
+// // for backprop-ing errors
+// ActivationLayer::deriv(float x)
+// {
+//   if (type == 0) { // ReLU
+//     if (x > 0) {
+//       return 1;
+//     }
+//     return 0;
+//   }
+//   else if (type == 1) { // sigmoid
+//     return sigmoid_prime(x)
+//   }
   
-}
+// }
+
+// void ActivationLayer::forward_prop(Tensor * input, Tensor * output)
+// {
+//   int num_images = input->dims->num_images;
+//   int num_channels = input->dims->num_channels;
+//   int dimX = input->dims->dimX;
+//   int dimY = input->dims->dimY;
+
+//   for (int n = 0; n < num_images; n++)
+//     for (int c = 0; c < num_channels; c++)
+//       for (int i = 0; i < dimX; i++)
+//         for (int j = 0; j < dimY; j++)
+//           output->set(n, c, i, j, activation(input->get(n, c, i, j)));
+
+//   // Save for backprop
+//   last_input = input;
+// }
+
+// void ActivationLayer::back_prop(Tensor * input_grad,
+// 				Tensor * output_grad)  
+// {
+//   int num_images = output_grad->dims->num_images;
+//   int num_channels = output_grad->dims->num_channels;
+//   int dimX = output_grad->dims->dimX;
+//   int dimY = output_grad->dims->dimY;
+
+//   for (int n = 0; n < num_images; n++)
+//     for (int c = 0; c < num_channels; c++)
+//       for (int i = 0; i < dimX; i++)
+//         for (int j = 0; j < dimY; j++) {
+//           float s = deriv(last_input->get(n, c, i, j));
+//           input_grad[n][c][i][j] = s * output_grad[n][c][i][j];
+//         }
+
+//   input_dimensions->num_images = num_images;
+//   input_dimensions->num_channels = num_channels; 
+//   input_dimensions->dimX = dimX;
+//   input_dimensions->dimY = dimY;
+// }
+
+// void ActivationLayer::output_dim(Dimensions * input_dimensions, 
+//       Dimensions * output_dimensions)
+// {
+//   output_dimensions->num_images = input_dimensions->num_images;
+//   output_dimensions->num_channels = input_dimensions->num_channels;
+//   output_dimensions->dimX = input_dimensions->dimX;
+//   output_dimensions->dimY = input_dimensions->dimY;
+// }
+
+// void ActivationLayer::free_layer()
+// {
+  
+// }
 
 
 
@@ -292,9 +326,12 @@ void PoolingLayer::output_dim(Dimensions * input_dimensions,
 /**
  * TODO: Initializing - small normal RV's?????
  */
-FullyConnectedLayer::FullyConnectedLayer(int num_neurons_, int input_dim_) {
+FullyConnectedLayer::FullyConnectedLayer(int num_neurons_, int input_dim_,
+					 int act_type)
+{
   num_neurons = num_neurons_;
   input_dim = input_dim_;
+  activation = new Activation(act_type);
   weights = new float*[num_neurons];
   for (int i = 0; i < num_neurons; i++) {
     weights[i] = new float[input_dim];
@@ -326,7 +363,7 @@ void FullyConnectedLayer::forward_prop(Tensor * input, Tensor * output) {
       for (int j = 0; j < reshaped_dims.dimX; j++) {
         sum += weights[n][j] * reshaped->get(i, 0, j, 0);
       }
-      output->set(i, 0, n, 0, sum);
+      output->set(i, 0, n, 0, activation->activ(sum));
     }
   }
 
@@ -387,6 +424,7 @@ void FullyConnectedLayer::flatten(Tensor * input, Tensor * reshaped)
 
 void FullyConnectedLayer::free_layer()
 {
+  free(activation);
   for (int n = 0; n < num_neurons; n++) {
     free(weights[n]);
   }
