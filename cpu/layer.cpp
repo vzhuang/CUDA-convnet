@@ -9,6 +9,48 @@
 #include <algorithm>
 
 
+Tensor::Tensor() {
+  
+}
+
+void Tensor::init_vals(Dimensions * dims_) {
+  dims = dims_;
+  int num_images = dims->num_images;
+  int num_channels = dims->num_channels;
+  int dimX = dims->dimX;
+  int dimY = dims->dimY;
+  vals = new float ***[num_images];
+  for (int i = 0; i < num_images; i++) {
+    vals[i] = new float **[num_channels];
+    for (int c = 0; c < num_channels; c++) {
+      vals[i][c] = new float *[dimX];
+      for (int x = 0; x < dimX; x++) {
+	vals[i][c][x] = new float[dimY];
+      }
+    }
+  }  
+}
+
+void Tensor::free_vals() {
+  int num_images = dims->num_images;
+  int num_channels = dims->num_channels;
+  int dimX = dims->dimX;
+  int dimY = dims->dimY;
+  for (int i = 0; i < num_images; i++) {
+    for (int c = 0; c < num_channels; c++) {
+      for (int x = 0; x < dimX; x++) {
+	free(vals[i][c][x]);
+      }
+      free(vals[i][c]);      
+    }
+    free(vals[i]);    
+  }
+  free(vals);
+}
+
+Matrix::Matrix() {
+  
+}
 
 
 ConvLayer::ConvLayer(int num_filters_, int size_, int stride_) {
@@ -21,7 +63,7 @@ ConvLayer::ConvLayer(int num_filters_, int size_, int stride_) {
     for (int i = 0; i < size; i++)
       weights[f][i] = new float[size];
   }
-  biases = new float[num_filters];
+  biases = new float[num_filters];	
   
   // Initialization
   for (int f = 0; f < num_filters; f++) 
@@ -32,8 +74,10 @@ ConvLayer::ConvLayer(int num_filters_, int size_, int stride_) {
     biases[f] = 1.0;
 }
 
-void ConvLayer::forward_prop(float **** input, Dimensions * input_dimensions,
-      float **** output, Dimensions * output_dimensions)
+void ConvLayer::forward_prop(float **** input,
+			     Dimensions * input_dimensions,
+			     float **** output,
+			     Dimensions * output_dimensions)
 {
   int num_images = input_dimensions->num_images;
   int num_channels = input_dimensions->num_channels;
@@ -70,8 +114,10 @@ void ConvLayer::forward_prop(float **** input, Dimensions * input_dimensions,
   output_dimensions->dimY = out_dimY; 
 }
 
-void ConvLayer::back_prop(float **** input_grad, Dimensions * input_dimensions,
-      float **** output_grad, Dimensions * output_dimensions) 
+void ConvLayer::back_prop(float **** input_grad,
+			  Dimensions * input_dimensions,
+			  float **** output_grad,
+			  Dimensions * output_dimensions) 
 {
   
 }
@@ -85,8 +131,10 @@ ActivationLayer::ActivationLayer() {
   
 }
 
-void ActivationLayer::forward_prop(float **** input, Dimensions * input_dimensions,
-      float **** output, Dimensions * output_dimensions)
+void ActivationLayer::forward_prop(float **** input,
+				   Dimensions * input_dimensions,
+				   float **** output,
+				   Dimensions * output_dimensions)
 {
   int num_images = input_dimensions->num_images;
   int num_channels = input_dimensions->num_channels;
@@ -108,8 +156,10 @@ void ActivationLayer::forward_prop(float **** input, Dimensions * input_dimensio
   last_input = input;
 }
 
-void ActivationLayer::back_prop(float **** input_grad, Dimensions * input_dimensions,
-      float **** output_grad, Dimensions * output_dimensions) 
+void ActivationLayer::back_prop(float **** input_grad,
+				Dimensions * input_dimensions,
+				float **** output_grad,
+				Dimensions * output_dimensions) 
 {
   int num_images = output_dimensions->num_images;
   int num_channels = output_dimensions->num_channels;
@@ -141,8 +191,10 @@ PoolingLayer::PoolingLayer(int pool_size_, int stride_) {
   stride = stride_;
 }
 
-void PoolingLayer::forward_prop(float **** input, Dimensions * input_dimensions,
-      float **** output, Dimensions * output_dimensions)
+void PoolingLayer::forward_prop(float **** input,
+				Dimensions * input_dimensions,
+				float **** output,
+				Dimensions * output_dimensions)
 {
   int num_images = input_dimensions->num_images;
   int num_channels = input_dimensions->num_channels;
@@ -201,8 +253,10 @@ void PoolingLayer::forward_prop(float **** input, Dimensions * input_dimensions,
   output_dimensions->dimY = out_dimY; 
 }
 
-void PoolingLayer::back_prop(float **** input_grad, Dimensions * input_dimensions,
-      float **** output_grad, Dimensions * output_dimensions) 
+void PoolingLayer::back_prop(float **** input_grad,
+			     Dimensions * input_dimensions,
+			     float **** output_grad,
+			     Dimensions * output_dimensions) 
 {
   int num_images = output_dimensions->num_images;
   int num_channels = output_dimensions->num_channels;
@@ -230,8 +284,7 @@ void PoolingLayer::back_prop(float **** input_grad, Dimensions * input_dimension
           int max_X = switches[n][c][i][j][0];
           int max_Y = switches[n][c][i][j][1];
           input_grad[n][c][max_X][max_Y] = output_grad[n][c][i][j];
-        }
-
+        }  
   input_dimensions->num_images = input_num_images;
   input_dimensions->num_channels = input_num_channels; 
   input_dimensions->dimX = input_dimX;
@@ -241,24 +294,76 @@ void PoolingLayer::back_prop(float **** input_grad, Dimensions * input_dimension
 
 
 /**
- * Idk how to implement this
+ * TODO: Initializing - small normal RV's?????
  */
-FullyConnectedLayer::FullyConnectedLayer() {
-
+FullyConnectedLayer::FullyConnectedLayer(int num_neurons_, int input_dim_) {
+  num_neurons = num_neurons_;
+  input_dim = input_dim_;
+  weights = new float*[num_neurons];
+  for (int i = 0; i < num_neurons; i++) {
+    weights[i] = new float[input_dim];
+  }
 }
 
-void FullyConnectedLayer::forward_prop(float **** input, Dimensions * input_dimensions,
-      float **** output, Dimensions * output_dimensions)
+void FullyConnectedLayer::forward_prop(Tensor * input,
+				       Tensor * output)
 {
-
+  // reshape input
+  int num_images = input->dims->num_images;
+  int num_channels = input->dims->num_channels;
+  int dimX = input->dims->dimX;
+  int dimY = input->dims->dimY;
+  Dimensions * reshaped_dims;
+  reshaped_dims->num_images = num_images;
+  reshaped_dims->num_channels = 1;
+  reshaped_dims->dimX = num_channels * dimX * dimY;
+  reshaped_dims->dimY = 1;
+  Tensor * reshaped = new Tensor();
+  reshaped->init(reshaped_dims);
+  flatten(input, reshaped);
+  input = reshaped;
+  Dimensions * out_dims;
+  out_dims->num_images = num_images;
+  out_dims->num_channels = 1;
+  out_dims->dimX = num_neurons;
+  out_dims->dimY = 1;
+  output->init(out_dims);
+  for (int i = 0; i < num_images; i++) {
+    for (int n = 0; n < num_neurons; n++) {
+	float sum = 0;
+	for (int j = 0; j < reshaped_dims->dimX; j++) {
+	  sum += weights[n][j] * reshaped[i][0][j][0];
+	}
+	output[i][0][n][0] = sum;
+    }
+  }
+  
 }
 
-void FullyConnectedLayer::back_prop(float **** input_grad, Dimensions * input_dimensions,
-      float **** output_grad, Dimensions * output_dimensions) 
+void FullyConnectedLayer::back_prop(float * input_grad,
+				    Dimensions * input_dimensions,
+				    float **** output_grad,
+				    Dimensions * output_dimensions) 
 {
   
 }
 
-float * FullyConnectedLayer::flatten() {
-  return NULL;
+void FullyConnectedLayer::flatten(Tensor * input, Tensor * reshaped);
+{
+  int num_images = input->dims->num_images;
+  int num_channels = input->dims->num_channels;
+  int dimX = input->dims->dimX;
+  int dimY = input->dims->dimY;
+  for (int i = 0; i < num_images; i++) {
+    for (int c = 0; c < num_channels; c++) {
+      for (int x = 0; x < dimX; x++) {
+	for (int y = 0; y < dimY; y++) {
+	  int ind = c * dimX * dimY + x * dimY + y;
+	  reshaped->vals[i][0][ind][0] = input->vals[i][c][x][y];
+	}
+      }
+    }
+  }
+  input->free();
+  delete input;
 }

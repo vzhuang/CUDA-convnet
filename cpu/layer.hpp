@@ -2,6 +2,19 @@ struct Dimensions {
   int num_images, num_channels, dimX, dimY;
 };
 
+/**
+ * Implements a four dimensional tensor
+ * Dimemsions as given in struct
+ */
+class Tensor {
+  float **** vals;
+  Dimensions * dims;
+
+  // initializes to zero
+  Tensor();
+  void init(Dimensions * dims);
+  void free();		
+};
 
 
 class Layer {
@@ -70,17 +83,18 @@ public:
 
 
 class FullyConnectedLayer : public Layer {
-  int num_neurons;
   
 public:
+  int num_neurons;
+  int input_dim;
   float ** weights;
 
-  FullyConnectedLayer();
+  FullyConnectedLayer(int num_neurons_, int input_dim_);
   void forward_prop(float **** input, Dimensions * input_dimensions,
       float **** output, Dimensions * output_dimensions);
   void back_prop(float **** input_grad, Dimensions * input_dimensions,
       float **** output_grad, Dimensions * output_dimensions);
 
   // flatten inputs
-  float * flatten(); 
+  void flatten(); 
 };
