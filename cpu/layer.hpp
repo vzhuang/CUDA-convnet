@@ -10,11 +10,9 @@
 class Layer {
 public:
   virtual void forward_prop(Tensor * input, Tensor * output) = 0;
-  virtual void back_prop(float **** input_grad, Dimensions * input_dimensions,
-      float **** output_grad, Dimensions * output_dimensions) = 0;
-  virtual void output_dim(Dimensions * input_dimensions, 
-			  Dimensions * output_dimensions) = 0;
-  virtual void free_layer();
+  virtual void back_prop(Tensor * input_grad, Tensor * output_grad) = 0;
+  virtual void output_dim(Dimensions * input_dims, Dimensions * output_dims) = 0;
+  virtual void free_layer() = 0;
 };
 
 
@@ -32,10 +30,8 @@ public:
   
   ConvLayer(int num_filters_, int size_, int stride_);
   void forward_prop(Tensor * input, Tensor * output);
-  void back_prop(float **** input_grad, Dimensions * input_dimensions,
-      float **** output_grad, Dimensions * output_dimensions);
-  void output_dim(Dimensions * input_dimensions, 
-		  Dimensions * output_dimensions);
+  void back_prop(Tensor * input_grad, Tensor * output_grad);
+  void output_dim(Dimensions * input_dims, Dimensions * output_dims);
   void free_layer();
 };
 
@@ -50,10 +46,8 @@ public:
   // activation types - ReLU, tanh, sigmoid?
   ActivationLayer();
   void forward_prop(Tensor * input, Tensor * output);
-  void back_prop(float **** input_grad, Dimensions * input_dimensions,
-      float **** output_grad, Dimensions * output_dimensions);
-  void output_dim(Dimensions * input_dimensions, 
-		  Dimensions * output_dimensions);
+  void back_prop(Tensor * input_grad, Tensor * output_grad);
+  void output_dim(Dimensions * input_dims, Dimensions * output_dims);
   void free_layer();
 };
 
@@ -62,7 +56,6 @@ public:
 class PoolingLayer : public Layer {
 
   // Use for backprop
-  Dimensions * last_input_dimensions;
   Tensor switches_X;
   Tensor switches_Y;
 
@@ -72,10 +65,9 @@ public:
 
   PoolingLayer(int pool_size_, int stride_);
   void forward_prop(Tensor * input, Tensor * output);
-  void back_prop(float **** input_grad, Dimensions * input_dimensions,
-      float **** output_grad, Dimensions * output_dimensions);
-  void output_dim(Dimensions * input_dimensions, 
-      Dimensions * output_dimensions);
+  void back_prop(Tensor * input_grad, Tensor * output_grad);
+  void output_dim(Dimensions * input_dims, Dimensions * output_dims);
+  void free_layer();
 };
 
 
@@ -90,14 +82,12 @@ public:
 
   FullyConnectedLayer(int num_neurons_, int input_dim_);
   void forward_prop(Tensor * input, Tensor * output);
-  void back_prop(float **** input_grad, Dimensions * input_dimensions,
-      float **** output_grad, Dimensions * output_dimensions);
-  void output_dim(Dimensions * input_dimensions, 
-      Dimensions * output_dimensions);
+  void back_prop(Tensor * input_grad, Tensor * output_grad);
+  void output_dim(Dimensions * input_dims, Dimensions * output_dims);
+  void free_layer();
 
   // flatten inputs
   void flatten(Tensor * input, Tensor * reshaped);
-  void free_layer();
 };
 
 #endif
