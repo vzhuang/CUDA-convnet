@@ -7,13 +7,14 @@ struct Dimensions {
  * Dimemsions as given in struct
  */
 class Tensor {
+public:  
   float **** vals;
   Dimensions * dims;
 
   // initializes to zero
   Tensor();
-  void init(Dimensions * dims);
-  void free();		
+  void init_vals(Dimensions * dims);
+  void free_vals();		
 };
 
 
@@ -90,11 +91,10 @@ public:
   float ** weights;
 
   FullyConnectedLayer(int num_neurons_, int input_dim_);
-  void forward_prop(float **** input, Dimensions * input_dimensions,
-      float **** output, Dimensions * output_dimensions);
+  void forward_prop(Tensor * input, Tensor * output);
   void back_prop(float **** input_grad, Dimensions * input_dimensions,
-      float **** output_grad, Dimensions * output_dimensions);
+		 float **** output_grad, Dimensions * output_dimensions);
 
   // flatten inputs
-  void flatten(); 
+  void flatten(Tensor * input, Tensor * reshaped); 
 };

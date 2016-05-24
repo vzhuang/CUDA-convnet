@@ -48,10 +48,6 @@ void Tensor::free_vals() {
   free(vals);
 }
 
-Matrix::Matrix() {
-  
-}
-
 
 ConvLayer::ConvLayer(int num_filters_, int size_, int stride_) {
   num_filters = num_filters_;
@@ -319,7 +315,7 @@ void FullyConnectedLayer::forward_prop(Tensor * input,
   reshaped_dims->dimX = num_channels * dimX * dimY;
   reshaped_dims->dimY = 1;
   Tensor * reshaped = new Tensor();
-  reshaped->init(reshaped_dims);
+  reshaped->init_vals(reshaped_dims);
   flatten(input, reshaped);
   input = reshaped;
   Dimensions * out_dims;
@@ -327,14 +323,14 @@ void FullyConnectedLayer::forward_prop(Tensor * input,
   out_dims->num_channels = 1;
   out_dims->dimX = num_neurons;
   out_dims->dimY = 1;
-  output->init(out_dims);
+  output->init_vals(out_dims);
   for (int i = 0; i < num_images; i++) {
     for (int n = 0; n < num_neurons; n++) {
 	float sum = 0;
 	for (int j = 0; j < reshaped_dims->dimX; j++) {
-	  sum += weights[n][j] * reshaped[i][0][j][0];
+	  sum += weights[n][j] * reshaped->vals[i][0][j][0];
 	}
-	output[i][0][n][0] = sum;
+	output->vals[i][0][n][0] = sum;
     }
   }
   
@@ -345,10 +341,10 @@ void FullyConnectedLayer::back_prop(float * input_grad,
 				    float **** output_grad,
 				    Dimensions * output_dimensions) 
 {
-  
+  return NULL;
 }
 
-void FullyConnectedLayer::flatten(Tensor * input, Tensor * reshaped);
+void FullyConnectedLayer::flatten(Tensor * input, Tensor * reshaped)
 {
   int num_images = input->dims->num_images;
   int num_channels = input->dims->num_channels;
@@ -364,6 +360,6 @@ void FullyConnectedLayer::flatten(Tensor * input, Tensor * reshaped);
       }
     }
   }
-  input->free();
+  input->free_vals();
   delete input;
 }
