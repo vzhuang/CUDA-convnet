@@ -95,11 +95,41 @@ void ConvLayer::free_layer()
 }
 
 
-ActivationLayer::ActivationLayer() {
+float ActivationLayer::ActivationLayer(int type_)
+{
+  type = type_;
+}
+
+float ActivationLayer::activation(float x)
+{
+  if (type == 0) { // ReLU
+    if (x > 0) {
+      return x;
+    }
+    return 0;
+  }
+  else if (type == 1) { // sigmoid
+    return sigmoid(x);
+  }
+}
+
+// for backprop-ing errors
+ActivationLayer::deriv(float x)
+{
+  if (type == 0) { // ReLU
+    if (x > 0) {
+      return 1;
+    }
+    return 0;
+  }
+  else if (type == 1) { // sigmoid
+    return sigmoid_prime(x)
+  }
   
 }
 
-void ActivationLayer::forward_prop(Tensor * input, Tensor * output) {
+void ActivationLayer::forward_prop(Tensor * input, Tensor * output)
+{
   int num_images = input->dims->num_images;
   int num_channels = input->dims->num_channels;
   int dimX = input->dims->dimX;
@@ -109,7 +139,7 @@ void ActivationLayer::forward_prop(Tensor * input, Tensor * output) {
     for (int c = 0; c < num_channels; c++)
       for (int i = 0; i < dimX; i++)
         for (int j = 0; j < dimY; j++)
-          output->set(n, c, i, j, sigmoid(input->get(n, c, i, j)));
+          output->set(n, c, i, j, activation(input->get(n, c, i, j)));
 
   // Save for backprop
   last_input = input;
@@ -127,7 +157,7 @@ void ActivationLayer::back_prop(Tensor * input_grad,
     for (int c = 0; c < num_channels; c++)
       for (int i = 0; i < dimX; i++)
         for (int j = 0; j < dimY; j++) {
-          float s = sigmoid_prime(last_input->get(n, c, i, j));
+          float s = deriv(last_input->get(n, c, i, j));
           input_grad[n][c][i][j] = s * output_grad[n][c][i][j];
         }
 
@@ -204,6 +234,9 @@ void PoolingLayer::forward_prop(Tensor * input, Tensor * output) {
       }
 }
 
+/**
+* Propagates errors through max pooling layer (i.e. to max points in prev layer)
+ */
 void PoolingLayer::back_prop(float **** input_grad,
            Dimensions * input_dimensions,
            float **** output_grad,
@@ -256,8 +289,6 @@ void PoolingLayer::output_dim(Dimensions * input_dimensions,
   output_dimensions->dimY = (dimY - pool_size) / stride + 1;
 }
 
-
-
 /**
  * TODO: Initializing - small normal RV's?????
  */
@@ -304,13 +335,22 @@ void FullyConnectedLayer::forward_prop(Tensor * input, Tensor * output) {
 }
 
 /** Get weights/bias gradients */
-void FullyConnectedLayer::back_prop(float **** input_grad,
-            Dimensions * input_dimensions,
-            float **** output_grad,
-            Dimensions * output_dimensions) 
+void FullyConnectedLayer::back_prop(Tensor * input_error,
+				    Tensor * output_error)  
 {
-  
+  // compute error for layer
+
+  // update weight gradients
+  int num_images = input_dimensions->num_images;
+  for (int i = 0; i < num_images; i++) {
+    for (int n = 0; n < num_neurons; i++) {
+      
+    }
+  }
+
+  // update bias gradients
 }
+
 
 void FullyConnectedLayer::output_dim(Dimensions * input_dimensions, 
       Dimensions * output_dimensions)

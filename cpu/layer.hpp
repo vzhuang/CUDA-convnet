@@ -2,19 +2,20 @@
 #define LAYER_H
 
 #include "tensor.hpp"
+#include <random>
 
 #define SOFTMAX 0
 #define RELU 1
 
 
 class Layer {
-public:
+public:  
   virtual void forward_prop(Tensor * input, Tensor * output) = 0;
   virtual void back_prop(float **** input_grad, Dimensions * input_dimensions,
       float **** output_grad, Dimensions * output_dimensions) = 0;
   virtual void output_dim(Dimensions * input_dimensions, 
 			  Dimensions * output_dimensions) = 0;
-  virtual void free_layer();
+  virtual void free_layer() = 0;
 };
 
 
@@ -46,9 +47,12 @@ class ActivationLayer : public Layer {
   // Use for backprop
   Tensor * last_input;
 
-public: 
+public:
+  int type;
   // activation types - ReLU, tanh, sigmoid?
-  ActivationLayer();
+  ActivationLayer(int type);
+  float activation(float x);
+  float deriv(float x);
   void forward_prop(Tensor * input, Tensor * output);
   void back_prop(float **** input_grad, Dimensions * input_dimensions,
       float **** output_grad, Dimensions * output_dimensions);
@@ -81,17 +85,20 @@ public:
 
 
 class FullyConnectedLayer : public Layer {
+  // Use for backprop
+  Tensor * last_input;
   
 public:
   int num_neurons;
   int input_dim;
   float ** weights;
+  float ** weights_grad;
   float * biases;
+  float * biases_grad;
 
   FullyConnectedLayer(int num_neurons_, int input_dim_);
   void forward_prop(Tensor * input, Tensor * output);
-  void back_prop(float **** input_grad, Dimensions * input_dimensions,
-      float **** output_grad, Dimensions * output_dimensions);
+  void back_prop(Tensor * input_error, Tensor * output_error);
   void output_dim(Dimensions * input_dimensions, 
       Dimensions * output_dimensions);
 
