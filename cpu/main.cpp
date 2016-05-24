@@ -23,8 +23,6 @@ int main() {
   FullyConnectedLayer l4 = FullyConnectedLayer(10, 10);
   layers[3] = &l4;
 
-
-<<<<<<< HEAD
   // Convolution layer: 32 5x5 filters
 
   
