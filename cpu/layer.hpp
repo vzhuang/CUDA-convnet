@@ -13,7 +13,8 @@ public:
   virtual void back_prop(float **** input_grad, Dimensions * input_dimensions,
       float **** output_grad, Dimensions * output_dimensions) = 0;
   virtual void output_dim(Dimensions * input_dimensions, 
-      Dimensions * output_dimensions) = 0;
+			  Dimensions * output_dimensions) = 0;
+  virtual void free_layer();
 };
 
 
@@ -34,7 +35,8 @@ public:
   void back_prop(float **** input_grad, Dimensions * input_dimensions,
       float **** output_grad, Dimensions * output_dimensions);
   void output_dim(Dimensions * input_dimensions, 
-      Dimensions * output_dimensions);
+		  Dimensions * output_dimensions);
+  void free_layer();
 };
 
 
@@ -51,7 +53,8 @@ public:
   void back_prop(float **** input_grad, Dimensions * input_dimensions,
       float **** output_grad, Dimensions * output_dimensions);
   void output_dim(Dimensions * input_dimensions, 
-      Dimensions * output_dimensions);
+		  Dimensions * output_dimensions);
+  void free_layer();
 };
 
 
@@ -93,7 +96,8 @@ public:
       Dimensions * output_dimensions);
 
   // flatten inputs
-  void flatten(Tensor * input, Tensor * reshaped); 
+  void flatten(Tensor * input, Tensor * reshaped);
+  void free_layer();
 };
 
 #endif

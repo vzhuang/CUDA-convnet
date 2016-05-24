@@ -62,10 +62,8 @@ void ConvLayer::forward_prop(Tensor * input, Tensor * output) {
       }
 }
 
-void ConvLayer::back_prop(float **** input_grad,
-        Dimensions * input_dimensions,
-        float **** output_grad,
-        Dimensions * output_dimensions) 
+void ConvLayer::back_prop(Tensor * input_grad,
+			  Tensor * output_grad)  
 {
   
 }
@@ -84,11 +82,19 @@ void ConvLayer::output_dim(Dimensions * input_dimensions,
   output_dimensions->dimY = (dimY - size) / stride + 1;
 }
 
+void ConvLayer::free_layer()
+{
+  for (int f = 0; f < num_filters; f++) {
+    for (int i = 0; i < size; i++) {
+      free(weights[f][i]);
+    }
+    free(weights[f]);
+  }
+  free(weights);
+  free(biases);
+}
 
 
-/**
- * Stick to sigmoid for now
- */
 ActivationLayer::ActivationLayer() {
   
 }
@@ -109,15 +115,13 @@ void ActivationLayer::forward_prop(Tensor * input, Tensor * output) {
   last_input = input;
 }
 
-void ActivationLayer::back_prop(float **** input_grad,
-        Dimensions * input_dimensions,
-        float **** output_grad,
-        Dimensions * output_dimensions) 
+void ActivationLayer::back_prop(Tensor * input_grad,
+				Tensor * output_grad)  
 {
-  int num_images = output_dimensions->num_images;
-  int num_channels = output_dimensions->num_channels;
-  int dimX = output_dimensions->dimX;
-  int dimY = output_dimensions->dimY;
+  int num_images = output_grad->dims->num_images;
+  int num_channels = output_grad->dims->num_channels;
+  int dimX = output_grad->dims->dimX;
+  int dimY = output_grad->dims->dimY;
 
   for (int n = 0; n < num_images; n++)
     for (int c = 0; c < num_channels; c++)
@@ -140,6 +144,11 @@ void ActivationLayer::output_dim(Dimensions * input_dimensions,
   output_dimensions->num_channels = input_dimensions->num_channels;
   output_dimensions->dimX = input_dimensions->dimX;
   output_dimensions->dimY = input_dimensions->dimY;
+}
+
+void ActivationLayer::free_layer()
+{
+  
 }
 
 
@@ -334,4 +343,13 @@ void FullyConnectedLayer::flatten(Tensor * input, Tensor * reshaped)
       }
     }
   }
+}
+
+void FullyConnectedLayer::free_layer()
+{
+  for (int n = 0; n < num_neurons; n++) {
+    free(weights[n]);
+  }
+  free(weights);
+  free(biases);
 }
