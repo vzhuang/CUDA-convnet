@@ -10,7 +10,7 @@ int main() {
   float **** X_test  = load_X("../data/t10k-images.idx3-ubyte", TEST_SIZE);
   float **   Y_test  = load_Y("../data/t10k-labels.idx1-ubyte", TEST_SIZE);
 
-  const int num_layers = 3;
+  const int num_layers = 4;
 
   Layer ** layers = new Layer*[num_layers];
   ConvLayer l1 = ConvLayer(1, 2, 2);
@@ -19,6 +19,10 @@ int main() {
   PoolingLayer l2 = PoolingLayer(2, 2);
   ActivationLayer l3 = ActivationLayer();
   layers[2] = &l3;
+
+  FullyConnectedLayer l4 = FullyConnectedLayer(10, 10);
+  layers[3] = &l4;
+
 
   Dimensions d = {1, 1, DIM, DIM};
 

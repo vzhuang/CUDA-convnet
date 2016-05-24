@@ -43,9 +43,6 @@ void NeuralNetwork::make_workspace() {
 void NeuralNetwork::step() {
   int k = 0;
 
-  visualize(X, k);
-  std::cout << un_hot(Y[k]) << std::endl;
-
   // Get dimensions of X
   int num_images = workspace[0].dims->num_images;
   int num_channels = workspace[0].dims->num_channels;
@@ -59,6 +56,7 @@ void NeuralNetwork::step() {
         for (int j = 0; j < dimY; j++) 
           workspace[0].vals[n][c][i][j] = X[n][c][i][j];
 
+  // Display X (input)
   visualize3(workspace[0].vals, 0, 0, dimX, dimY);
 
   // Fprop all layers
