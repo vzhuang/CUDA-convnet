@@ -20,6 +20,19 @@ int main() {
 
   Dimensions d = {1, 1, DIM, DIM};
 
+  // Convolution layer: 32 5x5 filters
+
+  
+
+  // ReLU activation layer
+
+  // 2x2 Max pooling layer
+
+  // Fully connected layer
+
+  // Softmax output layer
+  
+
   // ActivationLayer layer;
   // layer.forward_prop(X_train, &d, X_test, &d);
   // visualize2(X_test, k);

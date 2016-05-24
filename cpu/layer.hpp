@@ -69,6 +69,7 @@ public:
   int num_neurons;
   int input_dim;
   float ** weights;
+  float * biases;
 
   FullyConnectedLayer(int num_neurons_, int input_dim_);
   void forward_prop(Tensor * input, Tensor * output);

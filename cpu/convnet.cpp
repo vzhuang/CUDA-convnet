@@ -9,6 +9,7 @@ void ConvNet::ConvNet(Layer * layers, int num_layers) {
  * Deallocate memory
  */
 void ConvNet::free() {
+  
 	
 }
 
@@ -24,8 +25,8 @@ void ConvNet::free() {
  * batch_size: number of data_points in each batch
  */
 void ConvNet::train(float *** X, float ** Y, int n, int image_size,
-					float eta, int num_epochs, int batch_size) {
-	int num_batches = n / batch_size;
+		    float eta, int num_epochs, int batch_size) {
+  int num_batches = n / batch_size;
 	for (int i = 0; i < num_epochs; i++) {
 		for (int j = 0; j < num_batches; j++) {
 			// forward prop batch

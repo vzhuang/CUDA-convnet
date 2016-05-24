@@ -223,6 +223,7 @@ FullyConnectedLayer::FullyConnectedLayer(int num_neurons_, int input_dim_) {
   for (int i = 0; i < num_neurons; i++) {
     weights[i] = new float[input_dim];
   }
+  biases = new float*[num_neurons];
 }
 
 void FullyConnectedLayer::forward_prop(Tensor * input, Tensor * output) {
@@ -261,6 +262,7 @@ void FullyConnectedLayer::forward_prop(Tensor * input, Tensor * output) {
   }
 }
 
+/** Get weights/bias gradients */
 void FullyConnectedLayer::back_prop(float **** input_grad,
             Dimensions * input_dimensions,
             float **** output_grad,
