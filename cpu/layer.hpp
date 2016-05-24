@@ -1,3 +1,6 @@
+#ifndef LAYER_H
+#define LAYER_H
+
 #include "tensor.hpp"
 
 #define SOFTMAX 0
@@ -92,3 +95,5 @@ public:
   // flatten inputs
   void flatten(Tensor * input, Tensor * reshaped); 
 };
+
+#endif
