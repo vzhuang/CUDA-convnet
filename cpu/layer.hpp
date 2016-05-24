@@ -1,5 +1,8 @@
 #include "tensor.hpp"
 
+#define SOFTMAX 0
+#define RELU 1
+
 
 class Layer {
 public:
