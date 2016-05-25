@@ -385,16 +385,18 @@ void FullyConnectedLayer::back_prop(Tensor * input_error,
   // compute error for previous layer
   for (int i = 0; i < num_images; i++) {
     for (int n = 0; n < input_neurons; n++) {
-      float error = 0;
+      float error2 = 0;
       for(int o = 0; o < output_neurons; o++) {
-        error += weights[o][n] * output_error->get(i, 0, o, 0);
+        error2 += weights[o][n] * output_error->get(i, 0, o, 0);
       }
       float s = last_output->get(i, 0, n, 0);
-      error *= s * (1 - s);
+      
+      float error = error2 * s * (1 - s);
       // unflatten
       int y = n % dimY;
       int x = (n / dimY) % dimX;
       int c = (n / dimY) / dimX;   
+      // std::cout << i << " " << c << " " << x << " " << y << "\t" << s << "\t" << error2 << "\t" << error << std::endl;
       input_error->set(i, c, x, y, error); 
     }
   }
