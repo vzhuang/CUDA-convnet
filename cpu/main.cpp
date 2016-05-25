@@ -13,11 +13,11 @@ int main() {
   
   Layer ** layers = new Layer*[num_layers];
 
-  layers[0] = new FullyConnectedLayer(10, 784, RELU);
+  layers[0] = new FullyConnectedLayer(100, 784, RELU);
 
-  //  layers[1] = new FullyConnectedLayer(10, 100, SIGMOID);
+  layers[1] = new FullyConnectedLayer(10, 100, SIGMOID);
 
   // Train neural network
   ConvNet net = ConvNet(layers, num_layers, X_train, Y_train);
-  net.train(0.1, 20, 10, 5);
+  net.train(0.001, 20, 1000, 10);
 }
