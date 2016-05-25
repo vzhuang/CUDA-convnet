@@ -2,12 +2,13 @@
 #define LAYER_H
 
 #include "tensor.hpp"
+#include <stdio.h>
 #include <assert.h>
+#include <float.h>
 #include <random>
 
-#define SOFTMAX 0
-#define RELU 1
-
+#define RELU 0
+#define SIGMOID 1
 
 
 class Activation {
@@ -23,7 +24,7 @@ public:
 class Layer {
 public:  
   virtual void forward_prop(Tensor * input, Tensor * output) = 0;
-  virtual void back_prop(Tensor * input_grad, Tensor * output_grad) = 0;
+  virtual void back_prop(Tensor * input_grad, Tensor * output_grad, float eta) = 0;
   virtual void output_dim(Dimensions * input_dims, Dimensions * output_dims) = 0;
   virtual void free_layer() = 0;
 };
@@ -44,7 +45,7 @@ public:
   
   ConvLayer(int num_filters_, int size_, int stride_, int act_type);
   void forward_prop(Tensor * input, Tensor * output);
-  void back_prop(Tensor * input_grad, Tensor * output_grad);
+  void back_prop(Tensor * input_grad, Tensor * output_grad, float eta);
   void output_dim(Dimensions * input_dims, Dimensions * output_dims);
   void free_layer();
 };
@@ -80,7 +81,7 @@ public:
 
   PoolingLayer(int pool_size_, int stride_);
   void forward_prop(Tensor * input, Tensor * output);
-  void back_prop(Tensor * input_grad, Tensor * output_grad);
+  void back_prop(Tensor * input_grad, Tensor * output_grad, float eta);
   void output_dim(Dimensions * input_dims, Dimensions * output_dims);
   void free_layer();
 };
@@ -104,7 +105,7 @@ public:
 
   FullyConnectedLayer(int num_neurons_, int input_dim_, int act_type);
   void forward_prop(Tensor * input, Tensor * output);
-  void back_prop(Tensor * input_error, Tensor * output_error);
+  void back_prop(Tensor * input_error, Tensor * output_error, float eta);
   void output_dim(Dimensions * input_dims, Dimensions * output_dims);
   void free_layer();
 

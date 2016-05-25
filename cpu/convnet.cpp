@@ -47,7 +47,7 @@ void ConvNet::make_workspaces(int batch_size) {
     int dimY = fprop_space[l].dims->dimY;
 
     std::cout << "Layer " << l << ": " << num_images << " x "<< num_channels << " x "<< dimX << " x "<< dimY << std::endl;
-  }
+  } 
 }
 
 /**
@@ -55,17 +55,19 @@ void ConvNet::make_workspaces(int batch_size) {
  *
  * Params:
  * eta: learning rate
+ * num_epochs: number of times to pass through training set
  * num_batches: number of batches to run
  * batch_size: number of data_points in each batch
  */
-void ConvNet::train(float eta, int num_batches, int batch_size) {
+void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size)
+{
   // Allocate memory for both fprop and bprop
   make_workspaces(batch_size);
 
   // Memory to store training indices, Y, Y_pred
   int * indices = new int[batch_size];
   float ** Y = new float*[batch_size];
-  float ** Y_pred = new float*[batch_size];
+  float ** Y_pred = new float*[batch_size]; 
   for (int i = 0; i < batch_size; i++) {
     Y[i] = new float[10];
     Y_pred[i] = new float[10];
@@ -76,63 +78,56 @@ void ConvNet::train(float eta, int num_batches, int batch_size) {
 
   // Seed random generator...
   // srand (time(NULL));
-
-
-
+  
   // Actual training
-  for (int batch_index = 0; batch_index < num_batches; batch_index++) {
-    // Zero out the workspaces before beginning
-    for (int w = 0; w < num_layers + 1; w++) {
-      fprop_space[w].zero_out();
-      bprop_space[w].zero_out();
-    }
+  for (int epoch = 0; epoch < num_epochs; epoch++) {
+    for (int batch_index = 0; batch_index < num_batches; batch_index++) {
+      // Zero out the workspaces before beginning
+      for (int w = 0; w < num_layers + 1; w++) {
+	fprop_space[w].zero_out();
+	bprop_space[w].zero_out();
+      }
 
-    // Copy training batch to fprop_space[0]
-    for (int i = 0; i < batch_size; i++) {
-      indices[i] = rand() % X_train->dims->num_images;
-      memcpy(fprop_space[0].vals + i * image_size, 
-          X_train->vals + indices[i] * image_size, image_size * sizeof(float));
-    }
+      // Copy training batch to fprop_space[0]
+      for (int i = 0; i < batch_size; i++) {
+	indices[i] = rand() % X_train->dims->num_images;
+	memcpy(fprop_space[0].vals + i * image_size, 
+	    X_train->vals + indices[i] * image_size, image_size * sizeof(float));
+      }
 
-    // Display X (input)
-    visualize4(&fprop_space[0], 0, 0, fprop_space[0].dims->dimX, fprop_space[0].dims->dimY);
+      // Display X (input)
+      visualize4(&fprop_space[0], 0, 0, fprop_space[0].dims->dimX, fprop_space[0].dims->dimY);
 
-    // Fprop all layers
-    for (int l = 0; l < num_layers; l++) {
-      layers[l]->forward_prop(&fprop_space[l], &fprop_space[l + 1]);
-      visualize4(&fprop_space[l + 1], 0, 0, fprop_space[l + 1].dims->dimX, fprop_space[l + 1].dims->dimY);
-    }
+      // Fprop all layers
+      for (int l = 0; l < num_layers; l++) {
+	layers[l]->forward_prop(&fprop_space[l], &fprop_space[l + 1]);
+	visualize4(&fprop_space[l + 1], 0, 0, fprop_space[l + 1].dims->dimX, fprop_space[l + 1].dims->dimY);
+      }
 
-    // Fill Y, Y_pred
-    for (int i = 0; i < batch_size; i++) {
-      memcpy(Y[i], Y_train[indices[i]], 10 * sizeof(float));
+      // Fill Y, Y_pred
+      for (int i = 0; i < batch_size; i++) {
+	memcpy(Y[i], Y_train[indices[i]], 10 * sizeof(float));
 
-      // fprop_space[-1] is batch_size x 1 x 10 x 1
-      memcpy(Y_pred[i], fprop_space[num_layers].vals + i * 10, 10 * sizeof(float));
-    }
+	// fprop_space[-1] is batch_size x 1 x 10 x 1
+	memcpy(Y_pred[i], fprop_space[num_layers].vals + i * 10, 10 * sizeof(float));
+      }
 
-    // loss calculation
-    float tot_loss = loss(Y, Y_pred, batch_size);
-    std::cout << "Loss: " << tot_loss << std::endl;
-
-
-    // Display last gradients
-    visualize4(&bprop_space[num_layers], 0, 0, bprop_space[num_layers].dims->dimX, bprop_space[num_layers].dims->dimY);
-
-    // do backpropagation shit on batch
-    for (int l = num_layers - 1; l >= 0; l--) {
-      layers[l]->back_prop(&bprop_space[l], &bprop_space[l + 1]);
-      visualize4(&bprop_space[l], 0, 0, bprop_space[l].dims->dimX, bprop_space[l].dims->dimY);
-    }
+      // loss calculation
+      float tot_loss = loss(Y, Y_pred, batch_size);
+      std::cout << "Loss: " << tot_loss << std::endl;
 
 
-    // what's the best way to update weights?
+      // Display last gradients
+      visualize4(&bprop_space[num_layers], 0, 0, bprop_space[num_layers].dims->dimX, bprop_space[num_layers].dims->dimY);
 
+      // do backpropagation shit on batch
+      for (int l = num_layers - 1; l >= 0; l--) {
+	layers[l]->back_prop(&bprop_space[l], &bprop_space[l + 1], eta);
+	visualize4(&bprop_space[l], 0, 0, bprop_space[l].dims->dimX, bprop_space[l].dims->dimY);
+      }
 
-
-
+    }    
   }
-
 
 
   // Free everything

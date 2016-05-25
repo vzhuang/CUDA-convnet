@@ -64,7 +64,7 @@ void ConvLayer::forward_prop(Tensor * input, Tensor * output) {
       }
 }
 
-void ConvLayer::back_prop(Tensor * input_grad, Tensor * output_grad) {
+void ConvLayer::back_prop(Tensor * input_error, Tensor * output_error, float eta) {
   
 }
 
@@ -102,13 +102,13 @@ Activation::Activation(int type_)
 
 float Activation::activ(float x)
 {
-  if (type == 0) { // ReLU
+  if (type == RELU) { 
     if (x > 0) {
       return x;
     }
     return 0;
   }
-  else if (type == 1) { // sigmoid
+  else if (type == SIGMOID) {
     return sigmoid(x);
   }
 
@@ -118,13 +118,13 @@ float Activation::activ(float x)
 // for backprop-ing errors
 float Activation::deriv(float x)
 {
-  if (type == 0) { // ReLU
+  if (type == RELU) {
     if (x > 0) {
       return 1;
     }
     return 0;
   }
-  else if (type == 1) { // sigmoid
+  else if (type == SIGMOID) { 
     return sigmoid_prime(x);
   }
   
@@ -273,7 +273,7 @@ void PoolingLayer::forward_prop(Tensor * input, Tensor * output) {
 /**
 * Propagates errors through max pooling layer (i.e. to max points in prev layer)
  */
-void PoolingLayer::back_prop(Tensor * input_grad, Tensor * output_grad) {
+void PoolingLayer::back_prop(Tensor * input_grad, Tensor * output_grad, float eta) {
   int num_images = output_grad->dims->num_images;
   int num_channels = output_grad->dims->num_channels;
   int dimX = output_grad->dims->dimX;
@@ -325,9 +325,14 @@ FullyConnectedLayer::FullyConnectedLayer(int num_neurons_, int input_dim_,
     weights[i] = new float[input_dim];
   }
   biases = new float[num_neurons];
+  weight_grads = new Tensor();
+  bias_grads = new Tensor();
 }
 
 void FullyConnectedLayer::forward_prop(Tensor * input, Tensor * output) {
+  last_input = input;
+  last_output = output;
+  
   // reshape input
   int num_images = input->dims->num_images;
   int num_channels = input->dims->num_channels;
@@ -357,9 +362,13 @@ void FullyConnectedLayer::forward_prop(Tensor * input, Tensor * output) {
 
 /** Get weights/bias gradients */
 void FullyConnectedLayer::back_prop(Tensor * input_error,
-				    Tensor * output_error)  
+				    Tensor * output_error,
+				    float eta)  
 {
   int num_images = input_error->dims->num_images;
+  int num_channels = last_input->dims->num_channels;
+  int dimX = last_input->dims->dimX;
+  int dimY = last_input->dims->dimY;
   int input_neurons = input_error->dims->dimX;
   int output_neurons = output_error->dims->dimX;
   assert(input_neurons == input_dim);
@@ -373,11 +382,15 @@ void FullyConnectedLayer::back_prop(Tensor * input_error,
       }
       float s = last_output->get(i, 0, n, 0);
       error *= s * (1 - s);
-      input_error->set(i, 0, n, 0, error);
+      // unflatten
+      int y = n % dimY;
+      int x = (n / dimY) % dimX;
+      int c = (n / dimY) / dimX;      
+      input_error->set(i, c, x, y, error); 
     }
   }
 
-  // update current weight gradients
+  // calculate current weight gradients
   for (int i = 0; i < num_images; i++) {
     for (int o = 0; o < output_neurons; o++) {      
       for (int n = 0; n < input_neurons; n++) {
@@ -385,16 +398,28 @@ void FullyConnectedLayer::back_prop(Tensor * input_error,
 			  output_error->get(i, 0, o, 0)); 
       }      
     }
-
   }
-
-  // update bias gradients (just error)
+  // update weights
   for (int i = 0; i < num_images; i++) {
     for (int o = 0; o < output_neurons; o++) {
-      bias_grads->set(i, 0, o, 0, output_error->get(i));
+      for (int n = 0; n < input_neurons; n++) {
+	weights[o][n] -= eta * weight_grads->get(i, 0, o, n);
+      }
     }
-
+  }  
+  // calculate bias gradients (just error)
+  for (int i = 0; i < num_images; i++) {
+    for (int o = 0; o < output_neurons; o++) {
+      bias_grads->set(i, 0, o, 0, output_error->get(i, 0, o, o) / num_images);
+    }
   }
+  // update biases
+  for (int i = 0; i < num_images; i++) {
+    for (int o = 0; o < output_neurons; o++) {
+      biases[o] -= eta * bias_grads->get(i, 0, o, 0) / num_images;
+    }
+  }
+  
 }
 
 
@@ -407,7 +432,7 @@ void FullyConnectedLayer::output_dim(Dimensions * input_dims, Dimensions * outpu
 
   output_dims->num_images = num_images;
   output_dims->num_channels = 1;
-  output_dims->dimX = num_neurons;
+  output_dims->dimX = num_channels * dimX * dimY;
   output_dims->dimY = 1;
 }
 
@@ -421,7 +446,7 @@ void FullyConnectedLayer::flatten(Tensor * input, Tensor * reshaped)
     for (int c = 0; c < num_channels; c++) {
       for (int x = 0; x < dimX; x++) {
         for (int y = 0; y < dimY; y++) {
-          int ind = c * dimX * dimY + x * dimY + y;
+          int ind = ((c * dimX + x) * dimY) + y;
           reshaped->set(i, 0, ind, 0, input->get(i, c, x, y));
         }
       }
@@ -435,6 +460,10 @@ void FullyConnectedLayer::free_layer()
   for (int n = 0; n < num_neurons; n++) {
     free(weights[n]);
   }
+  weight_grads->free_vals();
+  bias_grads->free_vals();
+  free(weight_grads);
+  free(bias_grads);
   free(weights);
   free(biases);
 }

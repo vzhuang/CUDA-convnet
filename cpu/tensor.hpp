@@ -1,6 +1,8 @@
 #ifndef TENSOR_H
 #define TENSOR_H
 
+#include <string.h>
+
 struct Dimensions {
   int num_images, num_channels, dimX, dimY;
 };
