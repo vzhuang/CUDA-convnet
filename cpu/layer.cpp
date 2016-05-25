@@ -379,29 +379,38 @@ void FullyConnectedLayer::back_prop(Tensor * input_error,
   int dimY = last_input->dims->dimY;
   int input_neurons = input_error->dims->dimX;
   int output_neurons = output_error->dims->dimX;
+
+  // assert(input_neurons == input_dim);
+  // assert(output_neurons == num_neurons);
   // compute error for previous layer
   for (int i = 0; i < num_images; i++) {
     for (int n = 0; n < input_neurons; n++) {
       float error = 0;
       for(int o = 0; o < output_neurons; o++) {
-	error += weights[o][n] * output_error->get(i, 0, o, 0);
+        error += weights[o][n] * output_error->get(i, 0, o, 0);
       }
       float s = last_output->get(i, 0, n, 0);
       error *= s * (1 - s);
       // unflatten
       int y = n % dimY;
       int x = (n / dimY) % dimX;
-      int c = (n / dimY) / dimX;      
+      int c = (n / dimY) / dimX;   
       input_error->set(i, c, x, y, error); 
     }
   }
+
+  // allocate memory for weight_grads, bias_grads
+  Dimensions * dims = new Dimensions{num_images, 1, output_neurons, input_neurons};
+  weight_grads->init_vals(dims);
+  dims = new Dimensions{num_images, 1, output_neurons, 1};
+  bias_grads->init_vals(dims);
 
   // calculate current weight gradients
   for (int i = 0; i < num_images; i++) {
     for (int o = 0; o < output_neurons; o++) {      
       for (int n = 0; n < input_neurons; n++) {
-	weight_grads->set(i, 0, o, n, last_input->get(i, 0, n, 0) *	\
-			  output_error->get(i, 0, o, 0)); 
+        weight_grads->set(i, 0, o, n, last_input->get(i, 0, n, 0) *	\
+        output_error->get(i, 0, o, 0)); 
       }      
     }
   }
@@ -409,7 +418,7 @@ void FullyConnectedLayer::back_prop(Tensor * input_error,
   for (int i = 0; i < num_images; i++) {
     for (int o = 0; o < output_neurons; o++) {
       for (int n = 0; n < input_neurons; n++) {
-	weights[o][n] -= eta * weight_grads->get(i, 0, o, n);
+        weights[o][n] -= eta * weight_grads->get(i, 0, o, n);
       }
     }
   }  
@@ -426,6 +435,9 @@ void FullyConnectedLayer::back_prop(Tensor * input_error,
     }
   }
   
+  // Free allocated memory
+  weight_grads->free_vals();
+  bias_grads->free_vals();
 }
 
 
