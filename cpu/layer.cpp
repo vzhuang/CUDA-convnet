@@ -359,38 +359,42 @@ void FullyConnectedLayer::forward_prop(Tensor * input, Tensor * output) {
 void FullyConnectedLayer::back_prop(Tensor * input_error,
 				    Tensor * output_error)  
 {
-<<<<<<< HEAD
-  int num_images = input_dimensions->num_images;
-  int input_neurons = input_dimensions->dimX;
-  int output_neurons = output_dimensions->dimX;
+  int num_images = input_error->dims->num_images;
+  int input_neurons = input_error->dims->dimX;
+  int output_neurons = output_error->dims->dimX;
+  assert(input_neurons == input_dim);
+  assert(output_neurons == num_neurons);
   // compute error for previous layer
   for (int i = 0; i < num_images; i++) {
     for (int n = 0; n < input_neurons; n++) {
       float error = 0;
-      
-
-      float s = last_input->get(i, 0, n, 0);
+      for(int o = 0; o < output_neurons; o++) {
+	error += weights[o][n] * output_error->get(i, 0, o, 0);
+      }
+      float s = last_output->get(i, 0, n, 0);
       error *= s * (1 - s);
+      input_error->set(i, 0, n, 0, error);
     }
   }
 
   // update current weight gradients
-
   for (int i = 0; i < num_images; i++) {
-    for (int n = 0; n < input_neurons; i++) {
-=======
-  // compute error for layer
-
-  // update weight gradients
-  int num_images = input_error->dims->num_images;
-  for (int i = 0; i < num_images; i++) {
-    for (int n = 0; n < num_neurons; n++) {
->>>>>>> 739f5d27d335edd06f410cfb68e88575c97505cf
-      
+    for (int o = 0; o < output_neurons; o++) {      
+      for (int n = 0; n < input_neurons; n++) {
+	weight_grads->set(i, 0, o, n, last_input->get(i, 0, n, 0) *	\
+			  output_error->get(i, 0, o, 0)); 
+      }      
     }
+
   }
 
-  // update bias gradients
+  // update bias gradients (just error)
+  for (int i = 0; i < num_images; i++) {
+    for (int o = 0; o < output_neurons; o++) {
+      bias_grads->set(i, 0, o, 0, output_error->get(i));
+    }
+
+  }
 }
 
 

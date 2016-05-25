@@ -2,6 +2,7 @@
 #define LAYER_H
 
 #include "tensor.hpp"
+#include <assert.h>
 #include <random>
 
 #define SOFTMAX 0
@@ -89,15 +90,17 @@ public:
 class FullyConnectedLayer : public Layer {
   // Use for backprop
   Tensor * last_input;
+  Tensor * last_output;
   
 public:
   int num_neurons;
   int input_dim;
   Activation * activation;
   float ** weights;
-  float ** weights_grad;
   float * biases;
-  float * biases_grad;
+  // stores gradients for minibatch of images
+  Tensor * weight_grads;  
+  Tensor * bias_grads;
 
   FullyConnectedLayer(int num_neurons_, int input_dim_, int act_type);
   void forward_prop(Tensor * input, Tensor * output);
