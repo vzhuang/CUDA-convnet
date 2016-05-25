@@ -8,6 +8,17 @@
 #define RELU 1
 
 
+
+class Activation {
+public:
+  int type;
+  Activation(int type_);
+  float activ(float x);
+  float deriv(float x);
+};
+
+
+
 class Layer {
 public:  
   virtual void forward_prop(Tensor * input, Tensor * output) = 0;
@@ -37,14 +48,6 @@ public:
   void free_layer();
 };
 
-class Activation {
-public:
-  int type;
-  Activation(int type_);
-  float activ(float x);
-  float deriv(float x);
-};
-
 // class ActivationLayer : public Layer {
 
 //   // Use for backprop
@@ -63,7 +66,6 @@ public:
 // 		  Dimensions * output_dimensions);
 //   void free_layer();
 // };
-
 
 class PoolingLayer : public Layer {
 
@@ -99,7 +101,7 @@ public:
 
   FullyConnectedLayer(int num_neurons_, int input_dim_, int act_type);
   void forward_prop(Tensor * input, Tensor * output);
-  void back_prop(Tensor * input_grad, Tensor * output_grad);
+  void back_prop(Tensor * input_error, Tensor * output_error);
   void output_dim(Dimensions * input_dims, Dimensions * output_dims);
   void free_layer();
 

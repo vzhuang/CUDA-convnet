@@ -9,21 +9,21 @@ int main() {
   Tensor * X_test  = load_X("../data/t10k-images.idx3-ubyte", TEST_SIZE);
   float ** Y_test  = load_Y("../data/t10k-labels.idx1-ubyte", TEST_SIZE);
 
-  const int num_layers = 4;
+  const int num_layers = 3;
 
   Layer ** layers = new Layer*[num_layers];
 
   // Convolution layer: 32 5x5 filters
-  layers[0] = &ConvLayer(32, 5, 5);
+  layers[0] = &ConvLayer(32, 5, 5, RELU);
   
   // ReLU activation layer
-  layers[1] = &ActivationLayer();
+  // layers[1] = &ActivationLayer();
 
   // 2x2 Max pooling layer
-  layers[2] = &PoolingLayer(2, 2);
+  layers[1] = &PoolingLayer(2, 2);
 
   // Fully connected layer
-  layers[3] = &FullyConnectedLayer(10, 10);
+  layers[2] = &FullyConnectedLayer(10, 10, RELU);
 
   // Softmax output layer
   

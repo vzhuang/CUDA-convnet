@@ -93,7 +93,9 @@ void ConvLayer::free_layer()
   free(biases);
 }
 
-float Activation::Activation(int type_)
+
+
+Activation::Activation(int type_)
 {
   type = type_;
 }
@@ -109,9 +111,12 @@ float Activation::activ(float x)
   else if (type == 1) { // sigmoid
     return sigmoid(x);
   }
+
+  return -1;
+}
   
 // for backprop-ing errors
-Activation::deriv(float x)
+float Activation::deriv(float x)
 {
   if (type == 0) { // ReLU
     if (x > 0) {
@@ -120,9 +125,10 @@ Activation::deriv(float x)
     return 0;
   }
   else if (type == 1) { // sigmoid
-    return sigmoid_prime(x)
+    return sigmoid_prime(x);
   }
   
+  return -1;
 }
 
 // float ActivationLayer::ActivationLayer(int type_)
@@ -267,28 +273,11 @@ void PoolingLayer::forward_prop(Tensor * input, Tensor * output) {
 /**
 * Propagates errors through max pooling layer (i.e. to max points in prev layer)
  */
-void PoolingLayer::back_prop(float **** input_grad,
-           Dimensions * input_dimensions,
-           float **** output_grad,
-           Dimensions * output_dimensions) 
-{
-  int num_images = output_dimensions->num_images;
-  int num_channels = output_dimensions->num_channels;
-  int dimX = output_dimensions->dimX;
-  int dimY = output_dimensions->dimY;
-
-  int input_num_images = last_input_dimensions->num_images;
-  int input_num_channels = last_input_dimensions->num_channels;
-  int input_dimX = last_input_dimensions->dimX;
-  int input_dimY = last_input_dimensions->dimY;
-
-  // Zero out
-  for (int n = 0; n < input_num_images; n++)
-    for (int c = 0; c < input_num_channels; c++)
-      for (int i = 0; i < input_dimX; i++)
-        for (int j = 0; j < input_dimY; j++) {
-          input_grad[n][c][i][j] = 0;
-        }
+void PoolingLayer::back_prop(Tensor * input_grad, Tensor * output_grad) {
+  int num_images = output_grad->dims->num_images;
+  int num_channels = output_grad->dims->num_channels;
+  int dimX = output_grad->dims->dimX;
+  int dimY = output_grad->dims->dimY;
 
   // Bprop based on switches
   for (int n = 0; n < num_images; n++)
@@ -370,6 +359,7 @@ void FullyConnectedLayer::forward_prop(Tensor * input, Tensor * output) {
 void FullyConnectedLayer::back_prop(Tensor * input_error,
 				    Tensor * output_error)  
 {
+<<<<<<< HEAD
   int num_images = input_dimensions->num_images;
   int input_neurons = input_dimensions->dimX;
   int output_neurons = output_dimensions->dimX;
@@ -388,6 +378,14 @@ void FullyConnectedLayer::back_prop(Tensor * input_error,
 
   for (int i = 0; i < num_images; i++) {
     for (int n = 0; n < input_neurons; i++) {
+=======
+  // compute error for layer
+
+  // update weight gradients
+  int num_images = input_error->dims->num_images;
+  for (int i = 0; i < num_images; i++) {
+    for (int n = 0; n < num_neurons; n++) {
+>>>>>>> 739f5d27d335edd06f410cfb68e88575c97505cf
       
     }
   }
@@ -396,9 +394,7 @@ void FullyConnectedLayer::back_prop(Tensor * input_error,
 }
 
 
-void FullyConnectedLayer::output_dim(Dimensions * input_dimensions, 
-      Dimensions * output_dimensions)
-{
+void FullyConnectedLayer::output_dim(Dimensions * input_dims, Dimensions * output_dims) {
   // reshape input
   int num_images = input_dims->num_images;
   int num_channels = input_dims->num_channels;
