@@ -370,12 +370,24 @@ void FullyConnectedLayer::forward_prop(Tensor * input, Tensor * output) {
 void FullyConnectedLayer::back_prop(Tensor * input_error,
 				    Tensor * output_error)  
 {
-  // compute error for layer
-
-  // update weight gradients
   int num_images = input_dimensions->num_images;
+  int input_neurons = input_dimensions->dimX;
+  int output_neurons = output_dimensions->dimX;
+  // compute error for previous layer
   for (int i = 0; i < num_images; i++) {
-    for (int n = 0; n < num_neurons; i++) {
+    for (int n = 0; n < input_neurons; n++) {
+      float error = 0;
+      
+
+      float s = last_input->get(i, 0, n, 0);
+      error *= s * (1 - s);
+    }
+  }
+
+  // update current weight gradients
+
+  for (int i = 0; i < num_images; i++) {
+    for (int n = 0; n < input_neurons; i++) {
       
     }
   }
