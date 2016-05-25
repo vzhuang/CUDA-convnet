@@ -37,3 +37,12 @@ void Tensor::set(int a, int b, int c, int d, float val) {
 
   vals[((a * num_channels + b) * dimX + c) * dimY + d] = val;
 }
+
+void Tensor::zero_out() {
+  int num_images = dims->num_images;
+  int num_channels = dims->num_channels;
+  int dimX = dims->dimX;
+  int dimY = dims->dimY;
+  
+  memset(vals, 0, sizeof(float) * num_images * num_channels * dimX * dimY);
+}

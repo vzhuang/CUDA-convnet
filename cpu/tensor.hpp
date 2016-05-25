@@ -20,6 +20,7 @@ public:
   void free_vals();
   float get(int a, int b, int c, int d);              // Retrieve vals[a][b][c][d]
   void set(int a, int b, int c, int d, float val);    // Set vals[a][b][c][d] = val
+  void zero_out();
 };
 
 #endif

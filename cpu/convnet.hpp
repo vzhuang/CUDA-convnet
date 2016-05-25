@@ -7,9 +7,10 @@ class ConvNet {
   Tensor * X_train;
   float ** Y_train;
 
-  Tensor * workspace;    // Memory for doing fprop
+  Tensor * fprop_space;    // Memory for doing fprop
+  Tensor * bprop_space;    // Memory for doing bprop
 
-  void make_workspace();
+  void make_workspaces(int num_images);
   
 public:
   ConvNet(Layer ** layers_, int num_layers_, 
