@@ -25,8 +25,6 @@ void visualize4(Tensor * data, int ind1, int ind2, int dimX, int dimY) {
   } 
 }
 
-
-
 float sigmoid(float x)
 {
   return 1.0 / (1.0 + exp(-x));

@@ -1,5 +1,6 @@
 NVCC            ?= $(CUDA_BIN_PATH)/nvcc
 CC = /usr/bin/g++
+CFLAGS      = -Wall -ansi -pedantic -ggdb
 
 OBJS = layer.o main.o convnet.o tensor.o load.o utils.o 
 TARGETS = cpu
@@ -10,7 +11,7 @@ cpu: $(OBJS)
 	$(CC) -o $@ $^
 
 %.o: %.cpp
-	$(CC) -std=c++11 -c $< -o $@
+	$(CC) -std=c++11 -c $(CFLAGS) $< -o $@
 
 clean:
 	rm -f *.o $(TARGETS)

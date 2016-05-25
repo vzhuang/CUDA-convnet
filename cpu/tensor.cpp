@@ -12,7 +12,6 @@ void Tensor::init_vals(Dimensions * dims_) {
   int num_channels = dims->num_channels;
   int dimX = dims->dimX;
   int dimY = dims->dimY;
-
   vals = new float[num_images * num_channels * dimX * dimY];
 }
 
@@ -21,7 +20,7 @@ void Tensor::free_vals() {
 }
 
 float Tensor::get(int a, int b, int c, int d) {
-  int num_images = dims->num_images;
+  //int num_images = dims->num_images;
   int num_channels = dims->num_channels;
   int dimX = dims->dimX;
   int dimY = dims->dimY;
@@ -30,7 +29,7 @@ float Tensor::get(int a, int b, int c, int d) {
 }
 
 void Tensor::set(int a, int b, int c, int d, float val) {
-  int num_images = dims->num_images;
+  //int num_images = dims->num_images;
   int num_channels = dims->num_channels;
   int dimX = dims->dimX;
   int dimY = dims->dimY;

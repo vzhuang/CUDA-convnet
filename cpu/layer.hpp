@@ -22,9 +22,9 @@ public:
 
 
 class Layer {
-public:  
+public:
   virtual void forward_prop(Tensor * input, Tensor * output) = 0;
-  virtual void back_prop(Tensor * input_grad, Tensor * output_grad, float eta) = 0;
+  virtual void back_prop(Tensor * input_error, Tensor * output_error, float eta) = 0;
   virtual void output_dim(Dimensions * input_dims, Dimensions * output_dims) = 0;
   virtual void free_layer() = 0;
 };

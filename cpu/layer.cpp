@@ -317,12 +317,20 @@ void PoolingLayer::free_layer()
 FullyConnectedLayer::FullyConnectedLayer(int num_neurons_, int input_dim_,
 					 int act_type)
 {
+  std::default_random_engine gen;
+  std::normal_distribution<float> dist(0.0, 1.0);
   num_neurons = num_neurons_;
   input_dim = input_dim_;
   activation = new Activation(act_type);
   weights = new float*[num_neurons];
   for (int i = 0; i < num_neurons; i++) {
     weights[i] = new float[input_dim];
+
+  }
+  for (int i = 0; i < num_neurons; i++) {
+    for (int n = 0; n < input_dim; n++) {
+      weights[i][n] = dist(gen);
+    }
   }
   biases = new float[num_neurons];
   weight_grads = new Tensor();
@@ -371,8 +379,6 @@ void FullyConnectedLayer::back_prop(Tensor * input_error,
   int dimY = last_input->dims->dimY;
   int input_neurons = input_error->dims->dimX;
   int output_neurons = output_error->dims->dimX;
-  assert(input_neurons == input_dim);
-  assert(output_neurons == num_neurons);
   // compute error for previous layer
   for (int i = 0; i < num_images; i++) {
     for (int n = 0; n < input_neurons; n++) {
@@ -432,7 +438,7 @@ void FullyConnectedLayer::output_dim(Dimensions * input_dims, Dimensions * outpu
 
   output_dims->num_images = num_images;
   output_dims->num_channels = 1;
-  output_dims->dimX = num_channels * dimX * dimY;
+  output_dims->dimX = num_neurons;
   output_dims->dimY = 1;
 }
 
