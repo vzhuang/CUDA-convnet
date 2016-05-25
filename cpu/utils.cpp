@@ -20,10 +20,12 @@ int un_hot(float * arr) {
 void visualize4(Tensor * data, int ind1, int ind2, int dimX, int dimY) {
   for (int i = 0; i < dimX; i++) {
     for (int j = 0; j < dimY; j++)
-      printf("%3.f ", data->get(ind1, ind2, i, j));
+      printf("%0.3f ", data->get(ind1, ind2, i, j));
     printf("\n");
   } 
 }
+
+
 
 float sigmoid(float x)
 {
@@ -35,38 +37,60 @@ float sigmoid_prime(float x)
   return sigmoid(x) * (1 - sigmoid(x));
 }
 
+// float loss(float ** Y, float ** Y_pred, int num_Y) {
+//   float loss = 0.0;
+
+//   const float eps = 1e-15;
+//   for (int i = 0; i < num_Y; i++) {
+//     float sum = 0.0;
+//     for (int j = 0; j < 10; j++) {
+//       float val = Y_pred[i][j];
+
+//       // Clip to [eps, 1 - eps]
+//       if (val < eps)
+//         val = eps;
+//       else if (val > 1 - eps)
+//         val = 1-eps;
+
+//       sum += val;
+//     }
+
+//     for (int j = 0; j < 10; j++) {
+//       float val = Y_pred[i][j];
+
+//       // Clip to [eps, 1 - eps]
+//       if (val < eps)
+//         val = eps;
+//       else if (val > 1 - eps)
+//         val = 1-eps;
+
+//       val /= sum;
+
+//       loss += -Y[i][j] * log(val);
+//     }
+//   }
+
+//   return loss / num_Y;
+// }
+
 float loss(float ** Y, float ** Y_pred, int num_Y) {
   float loss = 0.0;
 
-  const float eps = 1e-15;
   for (int i = 0; i < num_Y; i++) {
-    float sum = 0.0;
-    for (int j = 0; j < 10; j++) {
+    float max_val = Y_pred[i][0];
+    int max_ind = 0;
+    for (int j = 1; j < 10; j++) {
       float val = Y_pred[i][j];
 
-      // Clip to [eps, 1 - eps]
-      if (val < eps)
-        val = eps;
-      else if (val > 1 - eps)
-        val = 1-eps;
-
-      sum += val;
+      if (val > max_val) {
+        max_val = val;
+        max_ind = j;
+      }
     }
 
-    for (int j = 0; j < 10; j++) {
-      float val = Y_pred[i][j];
-
-      // Clip to [eps, 1 - eps]
-      if (val < eps)
-        val = eps;
-      else if (val > 1 - eps)
-        val = 1-eps;
-
-      val /= sum;
-
-      loss += -Y[i][j] * log(val);
-    }
+    if (Y[i][max_ind] != 1)
+      loss++;
   }
 
-  return loss / num_Y;
+  return loss;
 }

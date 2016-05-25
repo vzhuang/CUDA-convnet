@@ -77,10 +77,11 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size)
   const int image_size = X_train->dims->num_channels * X_train->dims->dimX * X_train->dims->dimY;
 
   // Seed random generator...
-  // srand (time(NULL));
+  srand (time(NULL));
   
   // Actual training
   for (int epoch = 0; epoch < num_epochs; epoch++) {
+    float epoch_loss = 0.0;
     for (int batch_index = 0; batch_index < num_batches; batch_index++) {
       // Zero out the workspaces before beginning
       for (int w = 0; w < num_layers + 1; w++) {
@@ -113,12 +114,12 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size)
 
         // Copy diff to gradients
         for (int j = 0; j < 10; j++) 
-          bprop_space[num_layers].set(i, 0, j, 0, -(Y[i][j] - Y_pred[i][j]));
+          bprop_space[num_layers].set(i, 0, j, 0, Y_pred[i][j] - Y[i][j]);
       }
 
       // loss calculation
-      float tot_loss = loss(Y, Y_pred, batch_size);
-      std::cout << "Loss: " << tot_loss << std::endl;
+      epoch_loss += loss(Y, Y_pred, batch_size);
+      // std::cout << "Epoch loss: " << epoch_loss << std::endl; 
 
 
       // Display last gradients
@@ -129,8 +130,9 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size)
         layers[l]->back_prop(&bprop_space[l], &bprop_space[l + 1], eta);
         // visualize4(&bprop_space[l], 0, 0, bprop_space[l].dims->dimX, bprop_space[l].dims->dimY);
       }
+    } 
 
-    }    
+    std::cout << "Epoch loss: " << epoch_loss << std::endl;   
   }
 
 
