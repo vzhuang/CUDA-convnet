@@ -11,13 +11,13 @@ Tensor::Tensor(int num_images_, int num_channels_, int rows_, int cols_, bool gp
   dims.rows = rows_;
   dims.cols = cols_;
 
+  gpu_memory = gpu_memory_;
+
   int arr_size = dims.num_images * dims.num_channels * dims.rows * dims.cols * sizeof(float);
-  if (!gpu_memory_)
+  if (!gpu_memory)
     data = (float*) malloc(arr_size);
   else
     cudaMalloc((void **)&data, arr_size);
-
-  gpu_memory = gpu_memory_;
 }
 Tensor::Tensor(Dimensions * dims_, bool gpu_memory_) {
   dims.num_images = dims_->num_images;
@@ -25,18 +25,21 @@ Tensor::Tensor(Dimensions * dims_, bool gpu_memory_) {
   dims.rows = dims_->rows;
   dims.cols = dims_->cols;
 
+  gpu_memory = gpu_memory_;
+
   int arr_size = dims.num_images * dims.num_channels * dims.rows * dims.cols * sizeof(float);
-  if (!gpu_memory_)
+  if (!gpu_memory)
     data = (float*) malloc(arr_size);
   else
     cudaMalloc((void **)&data, arr_size);
-
-  gpu_memory = gpu_memory_;
 }
 
 // Destructor frees data array
 Tensor::~Tensor() {
-  free(data);
+  if (!gpu_memory)
+    free(data);
+  else
+    cudaFree(data);
 }
 
 // Getters + setters for convenience

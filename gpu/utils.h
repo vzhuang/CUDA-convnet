@@ -15,4 +15,10 @@ int un_hot(float * arr, int size);
 
 void print(Tensor * t, int n);
 
+
+Tensor * toGPU(Tensor * t);
+Tensor * toCPU(Tensor * t);
+
+
+
 #endif

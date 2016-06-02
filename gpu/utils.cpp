@@ -4,6 +4,7 @@
 #include <cstring>
 #include <cassert>
 #include <cstdio>
+#include <cuda_runtime.h>
 
 
 void one_hot(int k, float * arr, int size) {
@@ -34,3 +35,22 @@ void print(Tensor * t, int n) {
     printf("\n");
   }
 }
+
+
+Tensor * toGPU(Tensor * t) {
+  assert(!t->gpu_memory);
+  Tensor * dev_t = new Tensor(&(t->dims), true);
+
+  int data_size = t->dims.num_images * t->dims.num_channels * t->dims.rows * t->dims.cols * sizeof(float);
+  cudaMemcpy(dev_t->data, t->data, data_size, cudaMemcpyHostToDevice);
+  return dev_t;
+}
+Tensor * toCPU(Tensor * dev_t) {
+  assert(dev_t->gpu_memory);
+  Tensor * t = new Tensor(&(dev_t->dims), false);
+
+  int data_size = dev_t->dims.num_images * dev_t->dims.num_channels * dev_t->dims.rows * dev_t->dims.cols * sizeof(float);
+  cudaMemcpy(t->data, dev_t->data, data_size, cudaMemcpyDeviceToHost);
+  return t;
+}
+

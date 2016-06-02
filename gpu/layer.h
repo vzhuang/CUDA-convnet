@@ -22,8 +22,8 @@
  */
 class Layer {
 public:
-  virtual void fprop(Tensor * input, Tensor ** output) = 0;
-  virtual void bprop(Tensor ** input_error, Tensor * output_error, float eta) = 0;
+  virtual void fprop(Tensor * dev_input_, Tensor ** dev_output_) = 0;
+  virtual void bprop(Tensor ** dev_input_grad_, Tensor * dev_output_grad_, float eta) = 0;
 
   virtual void get_output_dims(Dimensions * input_dims, Dimensions * output_dims) = 0;
 
@@ -43,8 +43,8 @@ public:
 // public:
 //   ConvLayer(int num_filters_, int filter_size_, int stride_);
   
-//   void fprop(Tensor * input, Tensor ** output);
-//   void bprop(Tensor ** input_error, Tensor * output_error, float eta);
+//   void fprop(Tensor * dev_input_, Tensor ** dev_output_);
+//   void bprop(Tensor ** dev_input_grad_, Tensor * dev_output_grad_, float eta);
   
 //   void get_output_dims(Dimensions * input_dims, Dimensions * output_dims);
   
@@ -59,18 +59,19 @@ class PoolingLayer : public Layer {
   int stride;
 
   // Use for fprop
-  Tensor * output;
+  Tensor * dev_output;
 
   // Use for bprop
-  Tensor * switches_X;
-  Tensor * switches_Y;
+  Tensor * dev_input_grad;
+  Tensor * dev_switches_row;
+  Tensor * dev_switches_col;
 
 public: 
 
   PoolingLayer(int pool_size_, int stride_);
   
-  void fprop(Tensor * input, Tensor ** output);
-  void bprop(Tensor ** input_error, Tensor * output_error, float eta);
+  void fprop(Tensor * dev_input_, Tensor ** dev_output_);
+  void bprop(Tensor ** dev_input_grad_, Tensor * dev_output_grad_, float eta);
   
   void get_output_dims(Dimensions * input_dims, Dimensions * output_dims);
   
@@ -100,8 +101,8 @@ public:
 // public:
 //   FullyConnectedLayer(int num_neurons_, int input_dim_);
   
-//   void fprop(Tensor * input, Tensor ** output);
-//   void bprop(Tensor ** input_error, Tensor * output_error, float eta);
+//   void fprop(Tensor * dev_input_, Tensor ** dev_output_);
+//   void bprop(Tensor ** dev_input_grad_, Tensor * dev_output_grad_, float eta);
   
 //   void get_output_dims(Dimensions * input_dims, Dimensions * output_dims);
   
