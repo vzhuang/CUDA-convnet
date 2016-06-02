@@ -1,2 +1,4 @@
 *.cmd
 *.exe
+*.lib
+*.exp
