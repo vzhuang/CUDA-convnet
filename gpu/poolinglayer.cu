@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cuda_runtime.h>
 
-    #include <stdio.h>
+
 
 /**
  * Max pooling of size by size region
@@ -78,6 +78,7 @@ void PoolingLayer::fprop(Tensor * dev_input_, Tensor ** dev_output_) {
   *dev_output_ = dev_output;
 }
 
+
 /**
  * Propagates errors through max pooling layer (i.e. to max points in prev layer)
  */
@@ -121,12 +122,14 @@ void PoolingLayer::bprop(Tensor ** dev_input_grad_, Tensor * dev_output_grad_, f
   *dev_input_grad_ = dev_input_grad;
 }
 
+
 void PoolingLayer::get_output_dims(Dimensions * input_dims, Dimensions * output_dims) {
   output_dims->num_images = input_dims->num_images;
   output_dims->num_channels = input_dims->num_channels;
   output_dims->rows = (input_dims->rows - pool_size) / stride + 1;
   output_dims->cols = (input_dims->cols - pool_size) / stride + 1;
 }
+
 
 void PoolingLayer::init_mem(Dimensions * input_dims) {
   Dimensions d;
@@ -136,7 +139,6 @@ void PoolingLayer::init_mem(Dimensions * input_dims) {
   dev_switches_row = new Tensor(&d, true);
   dev_switches_col = new Tensor(&d, true);
 }
-
 void PoolingLayer::free_mem() {
   delete dev_output;
   delete dev_input_grad;

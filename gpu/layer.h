@@ -3,6 +3,7 @@
 
 
 #include "tensor.h"
+#include <cufft.h>
 
 
 /**
@@ -33,24 +34,36 @@ public:
 
 
 
-// class ConvLayer : public Layer {
-//   int num_filters;
-//   int filter_size;
-//   int stride;
+class ConvLayer : public Layer {
+  int num_filters;
+  int filter_size;
+  int stride;
+  Tensor * dev_weights;
+  Tensor * dev_biases;
 
-//   Tensor * weights;
+
+  // Memory for FFT/iFFT in fprop
+  cufftComplex * dev_input_fft;
+  cufftComplex * dev_weights_fft;
+
+  // fprop output
+  Tensor * dev_output;
+
+  // bprop output
+  Tensor * dev_input_grad;
   
-// public:
-//   ConvLayer(int num_filters_, int filter_size_, int stride_);
+public:
+  ConvLayer(int num_filters_, int filter_size_, int stride_);
+  ~ConvLayer();
   
-//   void fprop(Tensor * dev_input_, Tensor ** dev_output_);
-//   void bprop(Tensor ** dev_input_grad_, Tensor * dev_output_grad_, float eta);
+  void fprop(Tensor * dev_input_, Tensor ** dev_output_);
+  void bprop(Tensor ** dev_input_grad_, Tensor * dev_output_grad_, float eta);
   
-//   void get_output_dims(Dimensions * input_dims, Dimensions * output_dims);
+  void get_output_dims(Dimensions * input_dims, Dimensions * output_dims);
   
-//   void init_mem(Dimensions * input_dims);
-//   void free_mem();
-// };
+  void init_mem(Dimensions * input_dims);
+  void free_mem();
+};
 
 
 
@@ -58,16 +71,18 @@ class PoolingLayer : public Layer {
   int pool_size;
   int stride;
 
-  // Use for fprop
-  Tensor * dev_output;
 
-  // Use for bprop
-  Tensor * dev_input_grad;
+  // Dimensions depend on input size
   Tensor * dev_switches_row;
   Tensor * dev_switches_col;
 
-public: 
+  // fprop output
+  Tensor * dev_output;
 
+  // bprop output
+  Tensor * dev_input_grad;
+
+public: 
   PoolingLayer(int pool_size_, int stride_);
   
   void fprop(Tensor * dev_input_, Tensor ** dev_output_);
