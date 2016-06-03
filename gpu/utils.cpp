@@ -21,7 +21,7 @@ int un_hot(float * arr, int size) {
 
 
 
-void print(Tensor * t, int n) {
+void print(Tensor * t, int n, int c) {
   int num_images = t->dims.num_images;
   int num_channels = t->dims.num_channels;
   int rows = t->dims.rows;
@@ -30,7 +30,7 @@ void print(Tensor * t, int n) {
   printf("Size: %d x %d x %d x %d\n", num_images, num_channels, rows, cols);
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
-      printf("%3.f ", t->data[n * num_channels * rows * cols + i * rows + j]);
+      printf("%7.3f ", t->data[((n * num_channels + c) * rows + i) * cols + j]);
     }
     printf("\n");
   }

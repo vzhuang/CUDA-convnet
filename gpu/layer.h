@@ -4,6 +4,7 @@
 
 #include "tensor.h"
 #include <cufft.h>
+#include <cublas_v2.h>
 
 
 /**
@@ -38,13 +39,17 @@ class ConvLayer : public Layer {
   int num_filters;
   int filter_size;
   int stride;
+public:
   Tensor * dev_weights;
-  Tensor * dev_biases;
+  // Tensor * dev_biases;
+  cublasHandle_t handle;
 
 
-  // Memory for FFT/iFFT in fprop
-  cufftComplex * dev_input_fft;
-  cufftComplex * dev_weights_fft;
+  // Memory for stretching input/weights for FFT as matrix multiplication
+  Tensor * dev_stretch_input;
+  Tensor * dev_stretch_weights;
+  Tensor * dev_stretch_output;
+  float **dev_A, **dev_B, **dev_C;
 
   // fprop output
   Tensor * dev_output;
@@ -52,7 +57,6 @@ class ConvLayer : public Layer {
   // bprop output
   Tensor * dev_input_grad;
   
-public:
   ConvLayer(int num_filters_, int filter_size_, int stride_);
   ~ConvLayer();
   

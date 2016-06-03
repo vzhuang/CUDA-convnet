@@ -13,7 +13,7 @@ int un_hot(float * arr, int size);
 
 
 
-void print(Tensor * t, int n);
+void print(Tensor * t, int n, int c);
 
 
 Tensor * toGPU(Tensor * t);
