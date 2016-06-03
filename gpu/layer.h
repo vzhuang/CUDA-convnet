@@ -39,17 +39,21 @@ class ConvLayer : public Layer {
   int num_filters;
   int filter_size;
   int stride;
-public:
-  Tensor * dev_weights;
-  // Tensor * dev_biases;
   cublasHandle_t handle;
 
+public:
+  Tensor * dev_weights;   // Stored in column-major order!
+  Tensor * dev_biases;
 
-  // Memory for stretching input/weights for FFT as matrix multiplication
+  // Memory for stretching input and storing output for convolution as matrix multiplication
   Tensor * dev_stretch_input;
-  Tensor * dev_stretch_weights;
   Tensor * dev_stretch_output;
   float **dev_A, **dev_B, **dev_C;
+
+  // Gradients for weights and biases
+  Tensor * dev_weights_grad;
+  Tensor * dev_biases_grad;
+  Tensor * prev_input;
 
   // fprop output
   Tensor * dev_output;

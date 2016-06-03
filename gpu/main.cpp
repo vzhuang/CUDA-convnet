@@ -35,12 +35,14 @@ void testGPU(Tensor * X_train) {
 }
 void testGPU2(Tensor * X_train) {
   // Index of training set to visualize
-  const int k = 420;
+  const int k = 3;
+
+  // X_train->dims.num_images = 1;
 
   // Copy to GPU, init layer + memory
   Tensor * dev_X_train = toGPU(X_train);
   Tensor * dev_X_out;
-  ConvLayer l2 = ConvLayer(10, 2, 2);
+  ConvLayer l2 = ConvLayer(1, 2, 2);
   l2.init_mem(&dev_X_train->dims);
 
   // Output training data
@@ -50,21 +52,41 @@ void testGPU2(Tensor * X_train) {
   l2.fprop(dev_X_train, &dev_X_out);
   Tensor * X_out = toCPU(dev_X_out);
 
+  print(X_out, k, 0);
+
+  ConvLayer l3 = ConvLayer(2, 2, 2);
+  l3.init_mem(&dev_X_out->dims);
+  l3.fprop(dev_X_out, &dev_X_out);
+  X_out = toCPU(dev_X_out);
+
+  print(X_out, k, 0);
+  print(X_out, k, 1);
+
+
+
+  Tensor * dev_temp;
+  l3.bprop(&dev_temp, dev_X_out, 0.01);
+  Tensor * temp = toCPU(dev_temp);
+
+  print(temp, k, 0);
 
   // print(X_out, k, 0);
   // print(X_out, k, 1);
-  // print(X_out, k, 2);
-  print(X_out, k, 3);
 
   // Tensor * temp;
   // temp = toCPU(l2.dev_weights);
-  // print(temp, k, 3);
+  // print(temp, 0, 0);
+  temp = toCPU(l3.dev_weights);
+  print(temp, 0, 0);
   // temp = toCPU(l2.dev_stretch_weights);
   // print(temp, k, 0);
-  // temp = toCPU(l2.dev_stretch_input);
+  // temp = toCPU(l3.dev_stretch_input);
   // print(temp, k, 0);
-  // temp = toCPU(l2.dev_stretch_output);
+
+
+  // temp = toCPU(l3.dev_stretch_output);
   // print(temp, k, 0);
+  // print(temp, k, 1);
 }
 
 int main() {
