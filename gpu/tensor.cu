@@ -1,7 +1,6 @@
 #include "tensor.h"
 
 #include <cstdlib>
-#include <cuda_runtime.h>
 #include <stdio.h>
 #include <cuda_runtime.h>
 

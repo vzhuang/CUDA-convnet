@@ -42,7 +42,6 @@ __global__ void ConvLayerStretchInputKernel(
   int i = x * stride + (s / filter_size);
   int j = y * stride + (s % filter_size);
 
-  // const int stretch_index = n * blockDim.x * blockDim.y * gridDim.x * gridDim.y + x * blockDim.y * gridDim.x + y * gridDim.x + s;
   const int stretch_index = n * blockDim.x * blockDim.y * gridDim.x * gridDim.y + x * blockDim.y * gridDim.x * gridDim.y + y * gridDim.x * gridDim.y + c * gridDim.x + s;
   const int input_index = n * input_num_channels * input_rows * input_cols + c * input_rows * input_cols + i * input_cols + j;
 
