@@ -3,6 +3,11 @@
 
 #include "utils.h"
 
+
+#define RELU 0
+#define SIGMOID 1
+
+
 class Activation {
 public:
   int type;

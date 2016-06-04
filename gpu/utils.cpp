@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cstdio>
 #include <cuda_runtime.h>
+#include <math.h>
 
 
 void one_hot(int k, float * arr, int size) {
