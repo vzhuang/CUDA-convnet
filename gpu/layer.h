@@ -1,7 +1,7 @@
 #ifndef LAYER_H
 #define LAYER_H
 
-
+#include "activation.h"
 #include "tensor.h"
 #include <cufft.h>
 #include <cublas_v2.h>
@@ -105,22 +105,28 @@ public:
 class FullyConnectedLayer : public Layer {
   int num_neurons;
   int input_dim;
+  Activation activation;
+  cublasHandle_t handle;
 
-  float ** weights;
-  float * biases;
+  Tensor * dev_weights;
+  Tensor * dev_biases;
+
+  Tensor * dev_reshaped;
+  
   // stores gradients for minibatch of images
-  Tensor * weight_grads;  
-  Tensor * bias_grads;
+  Tensor * dev_weights_grad;  
+  Tensor * dev_biases_grad;
 
   // Use for backprop
-  Tensor * last_input;
-  Tensor * last_output;
+  Tensor * dev_last_input;
+  Tensor * dev_last_output;
   
   // flatten inputs
   void flatten(Tensor * input, Tensor * reshaped);
 
 public:
   FullyConnectedLayer(int num_neurons_, int input_dim_);
+  ~FullyConnectedLayer();
   
   void fprop(Tensor * dev_input_, Tensor ** dev_output_);
   void bprop(Tensor ** dev_input_grad_, Tensor * dev_output_grad_, float eta);
