@@ -1,7 +1,20 @@
 #include "tensor.h"
 
 #include <cstdlib>
+#include <stdio.h>
 #include <cuda_runtime.h>
+
+
+#define gpuErrchk(ans) { gpuAssert((ans)); }
+inline void gpuAssert(cudaError_t code)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr,"GPUassert: %s\n", cudaGetErrorString(code));
+      exit(code);
+   }
+}
+
 
 
 // Constructors that set dimensions and allocates memory for data array
@@ -14,10 +27,11 @@ Tensor::Tensor(int num_images_, int num_channels_, int rows_, int cols_, bool gp
   gpu_memory = gpu_memory_;
 
   int arr_size = dims.num_images * dims.num_channels * dims.rows * dims.cols * sizeof(float);
-  if (!gpu_memory)
+  if (!gpu_memory) {
     data = (float*) malloc(arr_size);
-  else
-    cudaMalloc((void **)&data, arr_size);
+  } else {
+    gpuErrchk( cudaMalloc((void **)&data, arr_size) );
+  }
 }
 Tensor::Tensor(Dimensions * dims_, bool gpu_memory_) {
   dims.num_images = dims_->num_images;
@@ -28,18 +42,20 @@ Tensor::Tensor(Dimensions * dims_, bool gpu_memory_) {
   gpu_memory = gpu_memory_;
 
   int arr_size = dims.num_images * dims.num_channels * dims.rows * dims.cols * sizeof(float);
-  if (!gpu_memory)
+  if (!gpu_memory) {
     data = (float*) malloc(arr_size);
-  else
-    cudaMalloc((void **)&data, arr_size);
+  } else {
+    gpuErrchk( cudaMalloc((void **)&data, arr_size) );
+  }
 }
 
 // Destructor frees data array
 Tensor::~Tensor() {
-  if (!gpu_memory)
+  if (!gpu_memory) {
     free(data);
-  else
-    cudaFree(data);
+  } else {
+    gpuErrchk( cudaFree(data) );
+  }
 }
 
 // Getters + setters for convenience

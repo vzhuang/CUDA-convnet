@@ -5,6 +5,7 @@
 #include "tensor.h"
 
 
+
 // One-hot an integer k, storing in array arr
 void one_hot(int k, float * arr, int size);
 

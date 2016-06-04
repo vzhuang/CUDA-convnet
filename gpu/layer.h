@@ -50,9 +50,11 @@ public:
   Tensor * dev_stretch_output;
   float **dev_A, **dev_B, **dev_C;
 
-  // Gradients for weights and biases
+  // Gradients for weights, biases, x
   Tensor * dev_weights_grad;
   Tensor * dev_biases_grad;
+  Tensor * dev_x_grad;
+
   Tensor * prev_input;
 
   // fprop output
