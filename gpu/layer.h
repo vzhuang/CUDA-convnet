@@ -102,36 +102,34 @@ public:
   void free_mem();
 };
 
+class FullyConnectedLayer : public Layer {
+  int num_neurons;
+  int input_dim;
 
+  float ** weights;
+  float * biases;
+  // stores gradients for minibatch of images
+  Tensor * weight_grads;  
+  Tensor * bias_grads;
 
-// class FullyConnectedLayer : public Layer {
-//   int num_neurons;
-//   int input_dim;
-
-//   float ** weights;
-//   float * biases;
-//   // stores gradients for minibatch of images
-//   Tensor * weight_grads;  
-//   Tensor * bias_grads;
-
-//   // Use for backprop
-//   Tensor * last_input;
-//   Tensor * last_output;
+  // Use for backprop
+  Tensor * last_input;
+  Tensor * last_output;
   
-//   // flatten inputs
-//   void flatten(Tensor * input, Tensor * reshaped);
+  // flatten inputs
+  void flatten(Tensor * input, Tensor * reshaped);
 
-// public:
-//   FullyConnectedLayer(int num_neurons_, int input_dim_);
+public:
+  FullyConnectedLayer(int num_neurons_, int input_dim_);
   
-//   void fprop(Tensor * dev_input_, Tensor ** dev_output_);
-//   void bprop(Tensor ** dev_input_grad_, Tensor * dev_output_grad_, float eta);
+  void fprop(Tensor * dev_input_, Tensor ** dev_output_);
+  void bprop(Tensor ** dev_input_grad_, Tensor * dev_output_grad_, float eta);
   
-//   void get_output_dims(Dimensions * input_dims, Dimensions * output_dims);
+  void get_output_dims(Dimensions * input_dims, Dimensions * output_dims);
   
-//   void init_mem(Dimensions * input_dims);
-//   void free_mem();
-// };
+  void init_mem(Dimensions * input_dims);
+  void free_mem();
+};
 
 
 #endif
