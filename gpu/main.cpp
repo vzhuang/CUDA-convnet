@@ -1,3 +1,4 @@
+#include "convnet.h"
 #include "layer.h"
 #include "load.h"
 #include "utils.h"
@@ -6,7 +7,7 @@
 #include <stdio.h>
 
 
-void testGPU(Tensor * X_train) {
+void testGPU(Tensor * X_train, Tensor * Y_train) {
   // Index of training set to visualize
   const int k = 3;
 
@@ -33,10 +34,10 @@ void testGPU(Tensor * X_train) {
   // Free layer
   l1.free_mem();
 }
-void testGPU2(Tensor * X_train) {
+void testGPU2(Tensor * X_train, Tensor * Y_train) {
   // Index of training set to visualize
-  const int k = 3;
-  X_train->dims.num_images = 10;
+  const int k = 0;
+  X_train->dims.num_images = 32;
 
 
   Tensor * dev_X_train;
@@ -66,12 +67,17 @@ void testGPU2(Tensor * X_train) {
   X_out = toCPU(dev_X_out);
   print(X_out, k, 0);
 
-  // PoolingLayer l3 = PoolingLayer(2, 2);
-  // l3.init_mem(&dev_X_out->dims);
-  // l3.fprop(dev_X_out, &dev_X_out);
-  // X_out = toCPU(dev_X_out);
-  // print(X_out, k, 0);
+  PoolingLayer l3 = PoolingLayer(2, 2);
+  l3.init_mem(&dev_X_out->dims);
+  l3.fprop(dev_X_out, &dev_X_out);
+  X_out = toCPU(dev_X_out);
+  print(X_out, k, 0);
 
+
+  temp = toCPU(l3.dev_switches_row);
+  print(temp, 0, 0);
+  temp = toCPU(l3.dev_switches_col);
+  print(temp, 0, 0);
 
 
   printf("\nWEIGHTS+BIASES\n\n");
@@ -90,9 +96,9 @@ void testGPU2(Tensor * X_train) {
 
   printf("\nBPROP\n\n");
 
-  // l3.bprop(&dev_X_out, dev_X_out, 0.1);
-  // X_out = toCPU(dev_X_out);
-  // print(X_out, k, 0);
+  l3.bprop(&dev_X_out, dev_X_out, 0.1);
+  X_out = toCPU(dev_X_out);
+  print(X_out, k, 0);
 
   l2.bprop(&dev_X_out, dev_X_out, 0.1);
   X_out = toCPU(dev_X_out);
@@ -130,13 +136,37 @@ void testGPU2(Tensor * X_train) {
   temp = toCPU(l2.dev_biases_grad);
   print(temp, 0, 0);
 }
+void testGPU3(Tensor * X_train, Tensor * Y_train) {
+
+  // Copy to GPU
+  Tensor * dev_X_train = toGPU(X_train);
+  Tensor * dev_Y_train = toGPU(Y_train);
+
+  // Init convnet
+  const int num_layers = 3;
+  Layer ** layers = new Layer*[num_layers];
+  layers[0] = new ConvLayer(2, 2, 2); 
+  layers[1] = new ConvLayer(2, 2, 2); 
+  layers[2] = new PoolingLayer(2, 2);
+  ConvNet cnet = ConvNet(layers, num_layers, dev_X_train, dev_Y_train);
+
+  // Train
+  const float eta = 0.01;
+  const int num_epochs = 1;
+  const int num_batches = 1;
+  const int batch_size = 32;
+
+  cnet.train(eta, num_epochs, num_batches, batch_size);
+
+  // TODO: Free layers
+}
 
 int main() {
   Tensor * X_train = load_X("../data/train-images.idx3-ubyte", TRAIN_SIZE);
   Tensor * Y_train = load_Y("../data/train-labels.idx1-ubyte", TRAIN_SIZE);
 
-  clock_t start = clock();
-  testGPU2(X_train);
-  printf("Time: %d\n", (int) (clock() - start));
 
+  clock_t start = clock();
+  testGPU3(X_train, Y_train);
+  printf("Time: %d\n", (int) (clock() - start));
 }
