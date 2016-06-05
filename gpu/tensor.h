@@ -11,6 +11,14 @@ struct Dimensions {
   int num_channels;
   int rows;
   int cols;
+
+  Dimensions() {};
+  Dimensions(int num_images_, int num_channels_, int rows_, int cols_) {
+    num_images = num_images_;
+    num_channels = num_channels_;
+    rows = rows_;
+    cols = cols_;
+  }
 };
 
 
