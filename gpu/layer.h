@@ -108,24 +108,21 @@ class FullyConnectedLayer : public Layer {
   int num_neurons;
   int input_dim;
   cublasHandle_t handle;
+  float **dev_A, **dev_B, **dev_C;
 
-  Tensor * dev_weights;
+  // Weights, biases
+  Tensor * dev_weights; // column major
   Tensor * dev_biases;
 
-  Tensor * dev_input;
+  // fprop output
   Tensor * dev_output;
 
+  // bprop output
   Tensor * dev_input_grad;
-
-  float ** dev_A, ** dev_B, ** dev_C;
   
-  // stores gradients for minibatch of images
-  //Tensor * dev_weights_grad;  
-  //Tensor * dev_biases_grad;
 
   // Use for backprop
   Tensor * dev_last_input;
-  Tensor * dev_last_output;
   
 public:
   FullyConnectedLayer(int num_neurons_, int input_dim_);
