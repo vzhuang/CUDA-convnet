@@ -114,19 +114,10 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size,
 
   // Memory to store training indices and loss
   int * indices = new int[batch_size];
-<<<<<<< HEAD:gpu/convnet.cpp
-  float ** Y = new float*[batch_size];
-  float ** Y_pred = new float*[batch_size]; 
-  for (int i = 0; i < batch_size; i++) {
-    Y[i] = new float[10];
-    Y_pred[i] = new float[10];
-  }
-=======
   int * dev_indices;
   int * dev_loss;
   cudaMalloc((void **)&dev_indices, sizeof(int) * batch_size);
   cudaMalloc((void **)&dev_loss, sizeof(int));
->>>>>>> ded1ce3d14a472eb708afd7592275eed106b95c7:gpu/convnet.cu
 
   // Size of a training image (in floats), number of training images
   const int image_size = dev_X_train->dims.num_channels * dev_X_train->dims.rows * dev_X_train->dims.cols;
@@ -153,7 +144,7 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size,
       // Variables to store all the pointers
       Tensor ** input = new Tensor*[num_layers + 1];
       Tensor ** errors = new Tensor*[num_layers + 1];
-      Tensor * temp;
+      //Tensor * temp;
 
       // Display X (input)
       // temp = toCPU(dev_X_in);
