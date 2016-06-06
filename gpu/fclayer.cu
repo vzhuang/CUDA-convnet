@@ -62,7 +62,7 @@ void cudaFCLayerBprop1Kernel(float * dev_input_grad_data,
 // computes weight gradients and applies SGD updates
 __global__
 void cudaFCLayerBprop2Kernel(float * dev_weights_data,			     
-			     float * prev_input_data,
+			     float * dev_last_input_data,
 			     float * dev_output_grad_data,
 			     int output_neurons,
 			     int input_neurons,
@@ -76,7 +76,7 @@ void cudaFCLayerBprop2Kernel(float * dev_weights_data,
   int weight_index = in_ind * output_neurons + out_ind;
   if(in_ind < input_neurons && out_ind < output_neurons) {
     // update appropriate weight with activation in prev_input_data
-    dev_weights_data[weight_index] -= eta * prev_input_data[in_ind] * dev_output_grad_data[out_ind];           
+    dev_weights_data[weight_index] -= eta * dev_last_input_data[in_ind] * dev_output_grad_data[out_ind];           
   }
 }
 
@@ -119,20 +119,24 @@ void FullyConnectedLayer::fprop(Tensor * dev_input_, Tensor ** dev_output_) {
   const float alpha = 1.0f;
   const float beta = 0.0f;
   int batchSize = dev_input_->dims.num_images;
+  
   cublasSgemmBatched(handle,
 		     CUBLAS_OP_N, CUBLAS_OP_N,
 		     m, n, k,
 		     &alpha,
-		     (const float **) &dev_weights->data, lda,
+		     (const float **) dev_A, lda,
 		     (const float **) &dev_input_->data, ldb,
 		     &beta,
 		     (float **) &(*dev_output_)->data, ldc,
 		     batchSize);
-  dev_output = *dev_output_;
+  *dev_output_ = dev_output;
   // add biases, perform activations
   int blocks = num_neurons / 1024 + 1;
   int threadsPerBlock = 1024;
   printf("fuck\n");
+  for (int i = 0 ; i < num_neurons; i++) {
+    printf("%d %f\n", i, (*dev_output_)->data[i]);
+  }
   cudaActivationKernel<<<blocks, threadsPerBlock >>>((*dev_output_)->data,
 						     dev_biases->data,
 						     num_neurons);
@@ -169,7 +173,7 @@ void FullyConnectedLayer::bprop(Tensor ** dev_input_grad_,
 		     CUBLAS_OP_T, CUBLAS_OP_N,
 		     m, n, k,
 		     &alpha,
-		     (const float **) dev_weights->data, lda,
+		     (const float **) dev_A, lda,
 		     (const float **) dev_output_grad_->data, ldb,
 		     &beta,
 		     (float **) (*dev_input_grad_)->data, ldc,
@@ -223,12 +227,36 @@ void FullyConnectedLayer::init_mem(Dimensions * input_dims) {
   curandGenerateNormal(gen, dev_weights->data, num_neurons * input_dim,
 		       0, 1);
 
+  // Output
+  Dimensions d;
+  get_output_dims(input_dims, &d);
+  dev_output = new Tensor(&d, true);
+  dev_input_grad = new Tensor(input_dims, true);
+
   // allocate memory for gradients
   // dev_weights_grad = new Tensor(input_dims->num_images, num_neurons,
   // 				input_dim, 1, true);
   // dev_biases_grad = new Tensor(input_dims->num_images, num_neurons, 1, 1,
   // 			       true);
-  
+
+  cudaMalloc((void **)&dev_A, sizeof(float *) * input_dims->num_images);
+  cudaMalloc((void **)&dev_B, sizeof(float *) * input_dims->num_images);
+  cudaMalloc((void **)&dev_C, sizeof(float *) * input_dims->num_images);
+  float **A;//, **B, **C;
+  A = (float **) malloc(sizeof(float *) * input_dims->num_images);
+  B = (float **) malloc(sizeof(float *) * input_dims->num_images);
+  C = (float **) malloc(sizeof(float *) * input_dims->num_images);
+  for (int i = 0; i < input_dims->num_images; i++) {
+    A[i] = dev_weights->data;
+    B[i] = dev_stretch_input->data + i * d.rows * d.cols * input_dims->num_channels * filter_size * filter_size;
+    C[i] = dev_stretch_output->data + i * d.num_channels * d.rows * d.cols;
+  }
+  cudaMemcpy(dev_A, A, sizeof(float *) * input_dims->num_images, cudaMemcpyHostToDevice);
+  cudaMemcpy(dev_B, B, sizeof(float *) * input_dims->num_images, cudaMemcpyHostToDevice);
+  cudaMemcpy(dev_C, C, sizeof(float *) * input_dims->num_images, cudaMemcpyHostToDevice);
+  free(A);
+  free(B);
+  free(C);  
 }
 
 void FullyConnectedLayer::free_mem() {

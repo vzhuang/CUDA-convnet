@@ -116,6 +116,8 @@ class FullyConnectedLayer : public Layer {
   Tensor * dev_output;
 
   Tensor * dev_input_grad;
+
+  float ** dev_A, ** dev_B, ** dev_C;
   
   // stores gradients for minibatch of images
   //Tensor * dev_weights_grad;  
