@@ -138,6 +138,7 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size)
         trainingindex++;
         trainingindex %= dev_X_train->dims.num_images;
       }
+      // printf("%d\n", trainingindex);
 
       // Variables to store all the pointers
       Tensor ** input = new Tensor*[num_layers + 1];
@@ -160,6 +161,7 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size)
       }
 
       // CALCULATE ERRORS (populate errors[num_layers])
+      cudaMemcpy(dev_indices, indices, sizeof(int) * batch_size, cudaMemcpyHostToDevice);
       cudaGetErrorKernel<<<1, batch_size, batch_size * sizeof(int)>>>(
           input[num_layers]->data, 
           dev_indices, 
