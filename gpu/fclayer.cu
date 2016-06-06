@@ -123,18 +123,20 @@ void FullyConnectedLayer::fprop(Tensor * dev_input_, Tensor ** dev_output_) {
 		     CUBLAS_OP_N, CUBLAS_OP_N,
 		     m, n, k,
 		     &alpha,
-		     (const float **) dev_weights->data, lda,
-		     (const float **) dev_input_->data, ldb,
+		     (const float **) &dev_weights->data, lda,
+		     (const float **) &dev_input_->data, ldb,
 		     &beta,
-		     (float **) (*dev_output_)->data, ldc,
+		     (float **) &(*dev_output_)->data, ldc,
 		     batchSize);
   dev_output = *dev_output_;
   // add biases, perform activations
   int blocks = num_neurons / 1024 + 1;
   int threadsPerBlock = 1024;
-  cudaActivationKernel<<<blocks, threadsPerBlock >>>(dev_output->data,
+  printf("fuck\n");
+  cudaActivationKernel<<<blocks, threadsPerBlock >>>((*dev_output_)->data,
 						     dev_biases->data,
-						     num_neurons);  
+						     num_neurons);
+  printf("suc\n");
 }
 
 void FullyConnectedLayer::bprop(Tensor ** dev_input_grad_,
@@ -168,7 +170,7 @@ void FullyConnectedLayer::bprop(Tensor ** dev_input_grad_,
 		     m, n, k,
 		     &alpha,
 		     (const float **) dev_weights->data, lda,
-		     (const float **) dev_output_grad->data, ldb,
+		     (const float **) dev_output_grad_->data, ldb,
 		     &beta,
 		     (float **) (*dev_input_grad_)->data, ldc,
 		     batchSize);  
@@ -230,5 +232,6 @@ void FullyConnectedLayer::init_mem(Dimensions * input_dims) {
 }
 
 void FullyConnectedLayer::free_mem() {
-  
+  delete dev_weights;
+  delete dev_biases;
 }

@@ -6,6 +6,7 @@
 #include <cufft.h>
 #include <cublas_v2.h>
 #include <float.h>
+#include <stdio.h>
 
 
 /**
@@ -113,10 +114,8 @@ class FullyConnectedLayer : public Layer {
 
   Tensor * dev_input;
   Tensor * dev_output;
-    
 
   Tensor * dev_input_grad;
-  Tensor * dev_output_grad;
   
   // stores gradients for minibatch of images
   //Tensor * dev_weights_grad;  
