@@ -19,7 +19,8 @@ public:
   ConvNet(Layer ** layers_, int num_layers_, 
       Tensor * dev_X_train_, Tensor * dev_Y_train_);
 
-  void train(float eta, int num_epochs, int num_batches, int batch_size);
+  void train(float eta, int num_epochs, int num_batches, int batch_size,
+             int train_size);  
 
 /**
  * Returns one-hot predictions for given dataset X

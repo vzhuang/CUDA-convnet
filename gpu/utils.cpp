@@ -54,3 +54,25 @@ Tensor * toCPU(Tensor * dev_t) {
   return t;
 }
 
+float loss(float ** Y, float ** Y_pred, int num_Y, int train_size) {
+  float loss = 0.0;
+
+  for (int i = 0; i < num_Y; i++) {
+    float max_val = Y_pred[i][0];
+    int max_ind = 0;
+    for (int j = 1; j < 10; j++) {
+      float val = Y_pred[i][j];
+
+      if (val > max_val) {
+        max_val = val;
+        max_ind = j;
+      }
+    }
+
+    if (Y[i][max_ind] != 1)
+      loss++;
+  }
+
+  return loss / train_size;
+}
+

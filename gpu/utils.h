@@ -16,4 +16,6 @@ void print(Tensor * t, int n, int c);
 Tensor * toGPU(Tensor * t);
 Tensor * toCPU(Tensor * t);
 
+float loss(float ** Y, float ** Y_pred, int num_Y, int train_size);
+
 #endif
