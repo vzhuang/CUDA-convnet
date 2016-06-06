@@ -176,7 +176,7 @@ void testGPU4(Tensor * X_train, Tensor * Y_train) {
   // Train
   const float eta = 0.01;
   const int num_epochs = 100;
-  const int num_batches = 100;
+  const int num_batches = TRAIN_SIZE/32;
   const int batch_size = 32;
   const int train_size = num_batches * batch_size;
   

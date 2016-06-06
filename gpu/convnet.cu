@@ -10,9 +10,9 @@
 // get errors
 __global__
 void cudaGetErrorKernel(float * dev_output_data,
-           int * indices,
-           float * dev_Y_data,
-           int * dev_loss) 
+			int * indices,
+			float * dev_Y_data,
+			int * dev_loss) 
 {
   extern __shared__ int loss[];
 
@@ -167,10 +167,10 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size,
           input[num_layers]->data, 
           dev_indices, 
           dev_Y_train->data, 
-          dev_loss);
+          dev_loss);      
       int loss = 0;
       cudaMemcpy(&loss, dev_loss, sizeof(int), cudaMemcpyDeviceToHost);
-      epoch_loss += loss;
+      epoch_loss += (float) loss / train_size;
 
       // Bprop all layers
       errors[num_layers] = input[num_layers];
