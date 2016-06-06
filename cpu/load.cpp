@@ -1,8 +1,8 @@
 #include "load.hpp"
+
 #include "utils.hpp"
 
 #include <fstream>
-
 
 Tensor * load_X(std::string filename, int SIZE) {
   std::ifstream inFile;

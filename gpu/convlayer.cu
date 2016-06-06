@@ -316,13 +316,15 @@ void ConvLayer::get_output_dims(Dimensions * input_dims, Dimensions * output_dim
 
 void ConvLayer::init_mem(Dimensions * input_dims) {
   // Parameters
-  dev_weights = new Tensor(1, input_dims->num_channels, filter_size * filter_size, num_filters, true);
+  dev_weights = new Tensor(1, input_dims->num_channels,
+			   filter_size * filter_size, num_filters, true);
   dev_biases = new Tensor(1, num_filters, 1, 1, true);
 
   // Initialization . . .
   curandGenerator_t gen;
   curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT);
-  curandGenerateUniform(gen, dev_weights->data, input_dims->num_channels * num_filters * filter_size * filter_size);
+  curandGenerateUniform(gen, dev_weights->data,
+			input_dims->num_channels * num_filters * filter_size * filter_size);
 
   // Output
   Dimensions d;
@@ -331,7 +333,8 @@ void ConvLayer::init_mem(Dimensions * input_dims) {
   dev_input_grad = new Tensor(input_dims, true);
 
   // Gradients
-  dev_weights_grad = new Tensor(1, input_dims->num_channels, filter_size * filter_size, num_filters, true);
+  dev_weights_grad = new Tensor(1, input_dims->num_channels,
+				filter_size * filter_size, num_filters, true);
   dev_biases_grad = new Tensor(1, num_filters, 1, 1, true);
   dev_x_grad = new Tensor(&d, true);
 

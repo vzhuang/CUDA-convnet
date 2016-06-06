@@ -12,6 +12,6 @@ void visualize4(Tensor * data, int ind1, int ind2, int dimX, int dimY);
 float sigmoid(float x);
 float sigmoid_prime(float x);
 
-float loss(float ** Y, float ** Y_pred, int num_Y);
+float loss(float ** Y, float ** Y_pred, int num_Y, int train_size);
 
 #endif

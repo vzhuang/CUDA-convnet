@@ -6,7 +6,6 @@
 #include <time.h>
 #include <stdio.h>
 
-
 void testGPU(Tensor * X_train, Tensor * Y_train) {
   // Index of training set to visualize
   const int k = 3;
@@ -39,12 +38,10 @@ void testGPU2(Tensor * X_train, Tensor * Y_train) {
   const int k = 0;
   X_train->dims.num_images = 32;
 
-
   Tensor * dev_X_train;
   Tensor * dev_X_out;
   Tensor * X_out;
   Tensor * temp;
-
 
   // Copy to GPU
   dev_X_train = toGPU(X_train);
@@ -161,12 +158,36 @@ void testGPU3(Tensor * X_train, Tensor * Y_train) {
   // TODO: Free layers
 }
 
+// Tests basic ANN (using only fully connected layers)
+void testGPU4(Tensor * X_train, Tensor * Y_train) {
+  // Copy to GPU
+  Tensor * dev_X_train = toGPU(X_train);
+  Tensor * dev_Y_train = toGPU(Y_train);
+
+  const int num_layers = 2;
+  
+  Layer ** layers = new Layer*[num_layers];
+
+  layers[0] = new FullyConnectedLayer(100, 784);
+  layers[1] = new FullyConnectedLayer(10, 100);
+  ConvNet cnet = ConvNet(layers, num_layers, dev_X_train, dev_Y_train);
+
+  // Train
+  const float eta = 0.01;
+  const int num_epochs = 10;
+  const int num_batches = 1;
+  const int batch_size = 32;
+
+  cnet.train(eta, num_epochs, num_batches, batch_size);
+  
+}
+
 int main() {
   Tensor * X_train = load_X("../data/train-images.idx3-ubyte", TRAIN_SIZE);
   Tensor * Y_train = load_Y("../data/train-labels.idx1-ubyte", TRAIN_SIZE);
 
 
   clock_t start = clock();
-  testGPU3(X_train, Y_train);
+  testGPU4(X_train, Y_train);
   printf("Time: %d\n", (int) (clock() - start));
 }

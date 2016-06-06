@@ -36,15 +36,18 @@ else
 endif
 
 
-TARGETS = convnet
+TARGETS = cnn
 
 all: $(TARGETS)
 
-convnet: main.o convlayer.o fclayer.o poolinglayer.o tensor.o load.o layer.o activation.o utils.o
-	$(CC) $< -o $@ main.o convlayer.o fclayer.o poolinglayer.o tensor.o load.o layer.o activation.o utils.o -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH) -fopenmp -lcurand
+cnn: main.o convnet.o convlayer.o fclayer.o poolinglayer.o tensor.o load.o utils.o
+	$(CC) $< -o $@ convnet.o convlayer.o fclayer.o poolinglayer.o tensor.o load.o utils.o -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH) -fopenmp -lcurand -lcublas
+
+convnet.o: convnet.cpp
+	$(CC) -std=c++11 -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH) -o $@ -c $<
 
 main.o: main.cpp
-	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $<
+	$(CC) -std=c++11 -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH) -o $@ -c $<
 
 convlayer.o: convlayer.cu
 	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $<
@@ -56,18 +59,12 @@ poolinglayer.o: poolinglayer.cu
 	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $<
 
 tensor.o: tensor.cu
-	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c
+	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $<
 
 load.o: load.cpp
 	$(CC) -std=c++11 -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH) -o $@ -c $<
 
-layer.o: layer.cpp
-	$(CC) -std=c++11 -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH) -o $@ -c $<
-
-activation.o: activation.cpp 
-	$(CC) -std=c++11 -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH) -o $@ -c $<
-
-utils.o: utils.cpp 
+utils.o: utils.cpp
 	$(CC) -std=c++11 -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH) -o $@ -c $<
 
 clean:

@@ -50,25 +50,6 @@ public:
   void free_layer();
 };
 
-// class ActivationLayer : public Layer {
-
-//   // Use for backprop
-//   Tensor * last_input;
-
-// public:
-//   int type;
-//   // activation types - ReLU, tanh, sigmoid?
-//   ActivationLayer(int type);
-//   float activation(float x);
-//   float deriv(float x);
-//   void forward_prop(Tensor * input, Tensor * output);
-//   void back_prop(float **** input_grad, Dimensions * input_dimensions,
-//       float **** output_grad, Dimensions * output_dimensions);
-//   void output_dim(Dimensions * input_dimensions, 
-// 		  Dimensions * output_dimensions);
-//   void free_layer();
-// };
-
 class PoolingLayer : public Layer {
 
   // Use for backprop

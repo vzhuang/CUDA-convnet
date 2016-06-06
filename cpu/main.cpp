@@ -18,5 +18,5 @@ int main() {
 
   // Train neural network
   ConvNet net = ConvNet(layers, num_layers, X_train, Y_train);
-  net.train(0.01, 100, 100, 10);
+  net.train(0.01, 100, TRAIN_SIZE / 10, 10, TRAIN_SIZE);
 }

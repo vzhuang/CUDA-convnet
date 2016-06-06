@@ -59,7 +59,8 @@ void ConvNet::make_workspaces(int batch_size) {
  * num_batches: number of batches to run
  * batch_size: number of data_points in each batch
  */
-void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size)
+void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size,
+		    int train_size)
 {
   // Allocate memory for both fprop and bprop
   make_workspaces(batch_size);
@@ -118,7 +119,7 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size)
       }
 
       // loss calculation
-      epoch_loss += loss(Y, Y_pred, batch_size);
+      epoch_loss += loss(Y, Y_pred, batch_size, train_size);
       // std::cout << "Epoch loss: " << epoch_loss << std::endl; 
 
 

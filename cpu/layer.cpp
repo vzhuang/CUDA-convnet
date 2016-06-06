@@ -389,7 +389,7 @@ void FullyConnectedLayer::back_prop(Tensor * input_error,
       for(int o = 0; o < output_neurons; o++) {
         error2 += weights[o][n] * output_error->get(i, 0, o, 0);
       }
-      float s = last_output->get(i, 0, n, 0);
+      float s = last_input->get(i, 0, n, 0);
       
       float error = error2 * s * (1 - s);
       // unflatten
@@ -420,14 +420,14 @@ void FullyConnectedLayer::back_prop(Tensor * input_error,
   for (int i = 0; i < num_images; i++) {
     for (int o = 0; o < output_neurons; o++) {
       for (int n = 0; n < input_neurons; n++) {
-        weights[o][n] -= eta * weight_grads->get(i, 0, o, n);
+        weights[o][n] -= eta * weight_grads->get(i, 0, o, n) / num_images;
       }
     }
   }  
   // calculate bias gradients (just error)
   for (int i = 0; i < num_images; i++) {
     for (int o = 0; o < output_neurons; o++) {
-      bias_grads->set(i, 0, o, 0, output_error->get(i, 0, o, o) / num_images);
+      bias_grads->set(i, 0, o, 0, output_error->get(i, 0, o, o));
     }
   }
   // update biases

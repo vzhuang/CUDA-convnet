@@ -73,7 +73,7 @@ float sigmoid_prime(float x)
 //   return loss / num_Y;
 // }
 
-float loss(float ** Y, float ** Y_pred, int num_Y) {
+float loss(float ** Y, float ** Y_pred, int num_Y, int train_size) {
   float loss = 0.0;
 
   for (int i = 0; i < num_Y; i++) {
@@ -92,5 +92,5 @@ float loss(float ** Y, float ** Y_pred, int num_Y) {
       loss++;
   }
 
-  return loss;
+  return loss / train_size;
 }

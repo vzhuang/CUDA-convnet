@@ -1,10 +1,11 @@
 #ifndef LAYER_H
 #define LAYER_H
 
-#include "activation.h"
 #include "tensor.h"
+#include "utils.h"
 #include <cufft.h>
 #include <cublas_v2.h>
+#include <float.h>
 
 
 /**
@@ -76,12 +77,11 @@ public:
 };
 
 
-
 class PoolingLayer : public Layer {
   int pool_size;
   int stride;
 
-
+public: 
   // Dimensions depend on input size
   Tensor * dev_switches_row;
   Tensor * dev_switches_col;
@@ -92,7 +92,6 @@ class PoolingLayer : public Layer {
   // bprop output
   Tensor * dev_input_grad;
 
-public: 
   PoolingLayer(int pool_size_, int stride_);
   
   void fprop(Tensor * dev_input_, Tensor ** dev_output_);
@@ -107,25 +106,26 @@ public:
 class FullyConnectedLayer : public Layer {
   int num_neurons;
   int input_dim;
-  Activation activation;
   cublasHandle_t handle;
 
   Tensor * dev_weights;
   Tensor * dev_biases;
 
-  Tensor * dev_reshaped;
+  Tensor * dev_input;
+  Tensor * dev_output;
+    
+
+  Tensor * dev_input_grad;
+  Tensor * dev_output_grad;
   
   // stores gradients for minibatch of images
-  Tensor * dev_weights_grad;  
-  Tensor * dev_biases_grad;
+  //Tensor * dev_weights_grad;  
+  //Tensor * dev_biases_grad;
 
   // Use for backprop
   Tensor * dev_last_input;
   Tensor * dev_last_output;
   
-  // flatten inputs
-  void flatten(Tensor * input, Tensor * reshaped);
-
 public:
   FullyConnectedLayer(int num_neurons_, int input_dim_);
   ~FullyConnectedLayer();
