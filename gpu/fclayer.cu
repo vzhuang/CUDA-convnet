@@ -59,7 +59,7 @@ void cudaFCLayerBprop1Kernel(float * dev_input_grad_data,
 // computes weight gradients and applies SGD updates
 __global__
 void cudaFCLayerBprop2Kernel(float * dev_weights_data,			     
-			     float * prev_input_data,
+			     float * dev_last_input_data,
 			     float * dev_output_grad_data,
 			     int output_neurons,
 			     int input_neurons,
@@ -73,7 +73,7 @@ void cudaFCLayerBprop2Kernel(float * dev_weights_data,
   int weight_index = in_ind * output_neurons + out_ind;
   if(in_ind < input_neurons && out_ind < output_neurons) {
     // update appropriate weight with activation in prev_input_data
-    dev_weights_data[weight_index] -= eta * prev_input_data[in_ind] * dev_output_grad_data[out_ind];           
+    dev_weights_data[weight_index] -= eta * dev_last_input_data[in_ind] * dev_output_grad_data[out_ind];           
   }
 }
 
@@ -120,6 +120,7 @@ void FullyConnectedLayer::fprop(Tensor * dev_input_, Tensor ** dev_output_) {
   const float alpha = 1.0f;
   const float beta = 0.0f;
   int batchSize = dev_input_->dims.num_images;
+  
   cublasSgemmBatched(handle,
 		     CUBLAS_OP_N, CUBLAS_OP_N,
 		     m, n, k,

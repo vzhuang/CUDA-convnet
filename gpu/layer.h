@@ -127,6 +127,7 @@ public:
 
   // bprop output
   Tensor * dev_input_grad;
+  
 
   // Use for backprop
   Tensor * dev_last_input;
