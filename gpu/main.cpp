@@ -165,19 +165,18 @@ void testGPU4(Tensor * X_train, Tensor * Y_train) {
   Tensor * dev_X_train = toGPU(X_train);
   Tensor * dev_Y_train = toGPU(Y_train);
 
-  const int num_layers = 3;
+  const int num_layers = 2;
   
   Layer ** layers = new Layer*[num_layers];
 
-  layers[0] = new ConvLayer(2, 2, 2); 
-  layers[1] = new PoolingLayer(2, 2);
-  layers[2] = new FullyConnectedLayer(10, 49);
+  layers[0] = new FullyConnectedLayer(100, 768);
+  layers[1] = new FullyConnectedLayer(10, 100);
   ConvNet cnet = ConvNet(layers, num_layers, dev_X_train, dev_Y_train);
 
   // Train
   const float eta = 0.01;
-  const int num_epochs = 10;
-  const int num_batches = 10;
+  const int num_epochs = 100;
+  const int num_batches = 100;
   const int batch_size = 32;
   const int train_size = num_batches * batch_size;
   
