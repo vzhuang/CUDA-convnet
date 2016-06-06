@@ -149,11 +149,12 @@ void testGPU3(Tensor * X_train, Tensor * Y_train) {
 
   // Train
   const float eta = 0.01;
-  const int num_epochs = 1;
+  const int num_epochs = 3;
   const int num_batches = 1;
   const int batch_size = 32;
+  const int train_size = num_batches * batch_size;
 
-  cnet.train(eta, num_epochs, num_batches, batch_size);
+  cnet.train(eta, num_epochs, num_batches, batch_size, train_size);
 
   // TODO: Free layers
 }
@@ -177,8 +178,9 @@ void testGPU4(Tensor * X_train, Tensor * Y_train) {
   const int num_epochs = 10;
   const int num_batches = 1;
   const int batch_size = 32;
-
-  cnet.train(eta, num_epochs, num_batches, batch_size);
+  const int train_size = num_batches * batch_size;
+  
+  cnet.train(eta, num_epochs, num_batches, batch_size, train_size);
   
 }
 
