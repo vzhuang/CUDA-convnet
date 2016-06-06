@@ -48,14 +48,11 @@ void cudaActivationKernel(float * dev_data,
 __global__
 void cudaFCLayerBprop1Kernel(float * dev_input_grad_data,
 			     float * dev_last_input_data,
-			     int output_neurons,
-			     int input_neurons,
-			     int num_images) {
+			     int output_neurons) {
   int ind = blockIdx.x * blockDim.x + threadIdx.x;
-  if (ind < input_neurons) {
-    float a = dev_last_input_data[ind];
-    dev_input_grad_data[ind] *= a * (1 - a);
-  }
+  float a = dev_last_input_data[ind];
+  dev_input_grad_data[ind] *= a * (1 - a);
+
   
 }
 
@@ -90,7 +87,12 @@ void cudaFCLayerBprop3Kernel(float * dev_output_grad_data,
   int ind = blockIdx.x * blockDim.x + threadIdx.x;
   if (ind < num_neurons) {
     // TODO: check output grad and biases are structured identically
-    dev_biases_data[ind] -= eta * dev_output_grad_data[ind] / num_images;
+    for (int i = 0; i < num_images; i++) {
+      int ind2 = ind + i * num_neurons;
+      dev_biases_data[ind] -= eta * dev_output_grad_data[ind2];
+    }
+
+    dev_biases_data[ind] /= num_images;
   }  
 }
 
@@ -99,13 +101,13 @@ void FullyConnectedLayer::fprop(Tensor * dev_input_, Tensor ** dev_output_) {
   dev_last_input = dev_input_;
 
   // input dimensions are fixed, so we don't have to reshape 1d tensor array  
-  // Input matrix
-  float **B;
-  B = (float **) malloc(sizeof(float *) * dev_input_->dims.num_images);
+  // Setup dev_D for cuBLAS
+  float **D;
+  D = (float **) malloc(sizeof(float *) * dev_input_->dims.num_images);
   for (int i = 0; i < dev_input_->dims.num_images; i++)
-    B[i] = dev_input_->data + i * input_dim;
-  cudaMemcpy(dev_B, B, sizeof(float *) * dev_input_->dims.num_images, cudaMemcpyHostToDevice);
-  free(B);
+    D[i] = dev_input_->data + i * input_dim;
+  cudaMemcpy(dev_D, D, sizeof(float *) * dev_input_->dims.num_images, cudaMemcpyHostToDevice);
+  free(D);
 
   // matrix multiply input with weight vector
   // dev_weights x dev_input_->data -> dev_output_->data
@@ -123,9 +125,9 @@ void FullyConnectedLayer::fprop(Tensor * dev_input_, Tensor ** dev_output_) {
 		     m, n, k,
 		     &alpha,
          (const float **) dev_A, lda, 
-         (const float **) dev_B, ldb, 
+         (const float **) dev_D, ldb, 
          &beta, 
-         dev_C, ldc,
+         dev_E, ldc,
 		     batchSize);
 
   // add biases, perform activations
@@ -134,30 +136,35 @@ void FullyConnectedLayer::fprop(Tensor * dev_input_, Tensor ** dev_output_) {
   cudaActivationKernel<<<blocks, threadsPerBlock >>>(
           dev_output->data,
 			    dev_biases->data,
-			    num_neurons);
+			    num_neurons * dev_input_->dims.num_images);
 
   *dev_output_ = dev_output;
 }
 
 void FullyConnectedLayer::bprop(Tensor ** dev_input_grad_,
 				Tensor * dev_output_grad_,
-				float eta) {
+				float eta) 
+{
   int num_images = dev_input_grad->dims.num_images;
-  //int num_channels = (*dev_input_grad_)->dims.num_channels;
-  //int rows = (*dev_input_grad_)->dims.rows;
-  //int cols = (*dev_input_grad_)->dims.cols;
+
 
   int b_in = input_dim / 1024 + 1;
   int t_in = 1024;
   int b_out = num_neurons / 1024 + 1;
   int t_out = 1024;
   
-  // compute error for previous layer
-  
-  // compute weights^T * output error
+  // Setup dev_B for cuBLAS
+  float **B;
+  B = (float **) malloc(sizeof(float *) * num_images);
+  for (int i = 0; i < num_images; i++)
+    B[i] = dev_output_grad_->data + i * num_neurons;
+  cudaMemcpy(dev_B, B, sizeof(float *) * num_images, cudaMemcpyHostToDevice);
+  free(B);
 
-  int m = input_dim;
-  int n = 1;
+  // compute error for previous layer
+  // compute weights^T * output error = output_error * weights 
+  int m = 1;
+  int n = input_dim;
   int k = num_neurons;
   int lda = m;
   int ldb = k;
@@ -166,29 +173,25 @@ void FullyConnectedLayer::bprop(Tensor ** dev_input_grad_,
   const float beta = 0.0f;
   int batchSize = dev_output_grad_->dims.num_images;
   cublasSgemmBatched(handle,
-		     CUBLAS_OP_T, CUBLAS_OP_N,
+		     CUBLAS_OP_N, CUBLAS_OP_N,
 		     m, n, k,
 		     &alpha,
-		     (const float **) dev_weights->data, lda,
-		     (const float **) dev_output_grad_->data, ldb,
-		     &beta,
-		     (float **) dev_input_grad->data, ldc,
+         (const float **) dev_B, lda, 
+         (const float **) dev_A, ldb, 
+         &beta, 
+         dev_C, ldc,
 		     batchSize);  
   
-  printf("fuck\n");
-  cudaFCLayerBprop1Kernel<<<b_in, t_in>>>(dev_input_grad->data,
+  // Errors for previous layer
+  cudaFCLayerBprop1Kernel<<<num_images, input_dim>>>(dev_input_grad->data,
 					  dev_last_input->data,
-					  num_neurons,
-					  input_dim,
-					  num_images);
-  printf("suc\n");
+					  num_neurons);
 
   
   // update weights for current layer
-  dim3 dimGrid2(num_images * b_in, t_in, b_out);
-  dim3 dimBlock2(t_out);
-  
-  cudaFCLayerBprop2Kernel<<<dimGrid2, dimBlock2>>>(dev_weights->data,
+  dim3 dimGrid(num_images * b_in, t_in, b_out);
+  dim3 dimBlock(t_out);
+  cudaFCLayerBprop2Kernel<<<dimGrid, dimBlock>>>(dev_weights->data,
 						   dev_last_input->data,
 						   dev_output_grad_->data,
 						   num_neurons,
@@ -202,6 +205,8 @@ void FullyConnectedLayer::bprop(Tensor ** dev_input_grad_,
 				num_images,
 				num_neurons,
 				eta);
+
+  *dev_input_grad_ = dev_input_grad;
 }
 
 void FullyConnectedLayer::get_output_dims(Dimensions * input_dims, Dimensions * output_dims) {
@@ -232,27 +237,27 @@ void FullyConnectedLayer::init_mem(Dimensions * input_dims) {
   dev_output = new Tensor(&d, true);
   dev_input_grad = new Tensor(input_dims, true);
 
-  // allocate memory for gradients
-  // dev_weights_grad = new Tensor(input_dims->num_images, num_neurons,
-  // 				input_dim, 1, true);
-  // dev_biases_grad = new Tensor(input_dims->num_images, num_neurons, 1, 1,
-  // 			       true);
-
   // cuBLAS batch processing
   cudaMalloc((void **)&dev_A, sizeof(float *) * input_dims->num_images);
   cudaMalloc((void **)&dev_B, sizeof(float *) * input_dims->num_images);
   cudaMalloc((void **)&dev_C, sizeof(float *) * input_dims->num_images);
-  float **A, **C;
+  cudaMalloc((void **)&dev_D, sizeof(float *) * input_dims->num_images);
+  cudaMalloc((void **)&dev_E, sizeof(float *) * input_dims->num_images);
+  float **A, **C, **E;
   A = (float **) malloc(sizeof(float *) * input_dims->num_images);
   C = (float **) malloc(sizeof(float *) * input_dims->num_images);
+  E = (float **) malloc(sizeof(float *) * input_dims->num_images);
   for (int i = 0; i < input_dims->num_images; i++) {
     A[i] = dev_weights->data;
-    C[i] = dev_output->data + i * num_neurons;
+    C[i] = dev_input_grad->data + i * input_dim;
+    E[i] = dev_output->data + i * num_neurons;
   }
   cudaMemcpy(dev_A, A, sizeof(float *) * input_dims->num_images, cudaMemcpyHostToDevice);
   cudaMemcpy(dev_C, C, sizeof(float *) * input_dims->num_images, cudaMemcpyHostToDevice);
+  cudaMemcpy(dev_E, E, sizeof(float *) * input_dims->num_images, cudaMemcpyHostToDevice);
   free(A);
   free(C);
+  free(E);
 }
 
 void FullyConnectedLayer::free_mem() {
@@ -265,4 +270,6 @@ void FullyConnectedLayer::free_mem() {
   cudaFree(dev_A);
   cudaFree(dev_B);
   cudaFree(dev_C);
+  cudaFree(dev_D);
+  cudaFree(dev_E);
 }

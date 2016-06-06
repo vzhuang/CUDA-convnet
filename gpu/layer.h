@@ -108,8 +108,16 @@ class FullyConnectedLayer : public Layer {
   int num_neurons;
   int input_dim;
   cublasHandle_t handle;
-  float **dev_A, **dev_B, **dev_C;
 
+  // used for cuBLAS
+  float **dev_A;  // weights
+  float **dev_B;  // output_error
+  float **dev_C;  // input_error
+  float **dev_D;  // input_data
+  float **dev_E;  // output_data
+
+
+public:
   // Weights, biases
   Tensor * dev_weights; // column major
   Tensor * dev_biases;
@@ -123,7 +131,6 @@ class FullyConnectedLayer : public Layer {
   // Use for backprop
   Tensor * dev_last_input;
   
-public:
   FullyConnectedLayer(int num_neurons_, int input_dim_);
   ~FullyConnectedLayer();
   
