@@ -24,12 +24,9 @@ ____________
 
 We implement the following layers:
 
-* convolution layers
-** hard padding
-** arbitrary stride, number of filters
+* convolution layers - hard padding; arbitrary stride, number of filters
 * max-pooling layers
-* fully connected layers
-** supports arbitrary number of neurons
+* fully connected layers - supports arbitrary number of neurons
 
 ## Results
 _______
