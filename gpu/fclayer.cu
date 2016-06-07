@@ -63,31 +63,33 @@ void cudaFCLayerBprop2Kernel(float * dev_weights_data,
 			     int input_neurons,
 			     int num_images,
 			     float eta) {
-  // int image_id = blockIdx.x / (blockDim.x / num_images);
-  // int block_id = blockIdx.x / num_images;
-  // int in_ind = block_id * blockDim.x + blockIdx.y;  
-  // int out_ind = blockIdx.z * blockDim.z + threadIdx.x;
-
-  // float c = eta / num_images;
-  // int weight_index = in_ind * output_neurons + out_ind;
-  // if(in_ind < input_neurons && out_ind < output_neurons) {
-  //   // update appropriate weight with activation in prev_input_data
-  //   dev_weights_data[weight_index] -= c * dev_last_input_data[image_id * input_neurons + in_ind] * dev_output_grad_data[image_id * output_neurons + out_ind];
-  //   // dev_weights_data[weight_index] -= eta * dev_last_input_data[in_ind] * dev_output_grad_data[out_ind];
-    
-  // }
-
-  int image_id = blockIdx.x;
-  int in_ind = blockIdx.y;  
-  int out_ind = threadIdx.x;
+  int image_id = blockIdx.x / (blockDim.x / num_images);
+  int block_id = blockIdx.x / num_images;
+  int in_ind = block_id * blockDim.x + blockIdx.y;  
+  int out_ind = blockIdx.z * blockDim.z + threadIdx.x;
 
   float c = eta / num_images;
   int weight_index = in_ind * output_neurons + out_ind;
   if(in_ind < input_neurons && out_ind < output_neurons) {
     // update appropriate weight with activation in prev_input_data
     dev_weights_data[weight_index] -= c * dev_last_input_data[image_id * input_neurons + in_ind] * dev_output_grad_data[image_id * output_neurons + out_ind];
+    // dev_weights_data[weight_index] -= eta * dev_last_input_data[in_ind] * dev_output_grad_data[out_ind];
     
   }
+
+  // int image_id = blockIdx.x;
+  // int in_ind = blockIdx.y;  
+  // int out_ind = threadIdx.x;
+
+  // float c = eta / num_images;
+  // int weight_index = in_ind * output_neurons + out_ind;
+  // if(in_ind < input_neurons && out_ind < output_neurons) {
+  //   // update appropriate weight with activation in prev_input_data
+  //   dev_weights_data[weight_index] -= c * dev_last_input_data[image_id * input_neurons + in_ind] * dev_output_grad_data[image_id * output_neurons + out_ind];
+    
+  //   // dev_weights_data[weight_index] -= eta * dev_last_input_data[in_ind] * dev_output_grad_data[out_ind] / num_images;   
+    
+  // }
 }
 
 // computes bias gradients and applies SGD updates

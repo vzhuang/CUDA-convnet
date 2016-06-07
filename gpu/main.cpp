@@ -210,7 +210,7 @@ void testGPU5(Tensor * X_train, Tensor * Y_train) {
   const int batch_size = 20;
   const int train_size = num_batches * batch_size;
 
-  cnet.train(eta, num_epochs, num_batches, batch_size, 1);
+  cnet.train(eta, num_epochs, num_batches, batch_size, TRAIN_SIZE);
 }
 
 int main() {
