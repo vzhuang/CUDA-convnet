@@ -164,22 +164,50 @@ void testGPU4(Tensor * X_train, Tensor * Y_train) {
   Tensor * dev_X_train = toGPU(X_train);
   Tensor * dev_Y_train = toGPU(Y_train);
 
-  const int num_layers = 2;
+  const int num_layers = 3;
   
   Layer ** layers = new Layer*[num_layers];
-
-  layers[0] = new FullyConnectedLayer(100, 768);
-  layers[1] = new FullyConnectedLayer(10, 100);
+  layers[0] = new ConvLayer(10, 2, 2); 
+  layers[1] = new PoolingLayer(2, 2);
+  // layers[0] = new FullyConnectedLayer(100, 748);
+  layers[2] = new FullyConnectedLayer(10, 490);
   ConvNet cnet = ConvNet(layers, num_layers, dev_X_train, dev_Y_train);
 
   // Train
   const float eta = 0.01;
   const int num_epochs = 100;
-  const int num_batches = 100;
-  const int batch_size = 32;
+  const int num_batches = TRAIN_SIZE;
+  const int batch_size = 1;
 
   cnet.train(eta, num_epochs, num_batches, batch_size);
   
+}
+void testGPU5(Tensor * X_train, Tensor * Y_train) {
+  // 95% net
+  // Layers:
+  //   ConvLayer, 10 filters, 2x2
+  //   PoolingLayer, 2x2
+  //   FullyConnectedLayer
+
+  // Copy to GPU
+  Tensor * dev_X_train = toGPU(X_train);
+  Tensor * dev_Y_train = toGPU(Y_train);
+
+  // Init convnet
+  const int num_layers = 3;
+  Layer ** layers = new Layer*[num_layers];
+  layers[0] = new ConvLayer(10, 2, 2); 
+  layers[1] = new PoolingLayer(2, 2);
+  layers[2] = new FullyConnectedLayer(10, 490);
+  ConvNet cnet = ConvNet(layers, num_layers, dev_X_train, dev_Y_train);
+
+  // Train
+  const float eta = 0.01;
+  const int num_epochs = 100;
+  const int num_batches = TRAIN_SIZE;
+  const int batch_size = 1;
+
+  cnet.train(eta, num_epochs, num_batches, batch_size);
 }
 
 int main() {
@@ -188,6 +216,6 @@ int main() {
 
 
   clock_t start = clock();
-  testGPU4(X_train, Y_train);
+  testGPU5(X_train, Y_train);
   printf("Time: %ds\n", (int) (clock() - start) / 1000);
 }

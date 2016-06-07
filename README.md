@@ -32,3 +32,29 @@ We implement the following layers:
 _______
 
 We test our performance on the MNIST dataset. Our following architecture achieves accuracy.
+
+The vanilla cpu version achieves ~80% accuracy at convergence, while a simple 3 layer (convolution->pooling->fully connected) gpu network achieves ~95% accuracy. It also trains much faster [numbers needed].
+
+```
+Layer 0: 1 x 1 x 28 x 28 --> 1 x 10 x 14 x 14
+Layer 1: 1 x 10 x 14 x 14 --> 1 x 10 x 7 x 7
+Layer 2: 1 x 10 x 7 x 7 --> 1 x 1 x 10 x 1
+Epoch loss: 0.232267
+Epoch loss: 0.146917
+Epoch loss: 0.125667
+Epoch loss: 0.1067
+Epoch loss: 0.092
+Epoch loss: 0.0806833
+Epoch loss: 0.0728667
+Epoch loss: 0.0672167
+Epoch loss: 0.0625
+Epoch loss: 0.0587833
+Epoch loss: 0.0563
+Epoch loss: 0.0539333
+Epoch loss: 0.0521167
+Epoch loss: 0.0505833
+Epoch loss: 0.0496333
+Epoch loss: 0.0486833
+Epoch loss: 0.04765
+Epoch loss: 0.0466833
+```
