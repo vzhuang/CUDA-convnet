@@ -63,8 +63,7 @@ void cudaFCLayerBprop2Kernel(float * dev_weights_data,
 			     int input_neurons,
 			     int num_images,
 			     float eta) {
-  int image_id = blockIdx.x / (blockDim.x / num_images);
-  int block_id = blockIdx.x / num_images;
+  int block_id = blockIdx.x;
   int in_ind = block_id * blockDim.x + blockIdx.y;  
   int out_ind = blockIdx.z * blockDim.z + threadIdx.x;
 
@@ -72,7 +71,10 @@ void cudaFCLayerBprop2Kernel(float * dev_weights_data,
   int weight_index = in_ind * output_neurons + out_ind;
   if(in_ind < input_neurons && out_ind < output_neurons) {
     // update appropriate weight with activation in prev_input_data
-    dev_weights_data[weight_index] -= c * dev_last_input_data[image_id * input_neurons + in_ind] * dev_output_grad_data[image_id * output_neurons + out_ind];
+    for(int image_id = 0; image_id < num_images; image_id++) {
+      dev_weights_data[weight_index] -= c * dev_last_input_data[image_id * input_neurons + in_ind] * dev_output_grad_data[image_id * output_neurons + out_ind];
+    }
+    
     // dev_weights_data[weight_index] -= eta * dev_last_input_data[in_ind] * dev_output_grad_data[out_ind];
     
   }
@@ -215,7 +217,7 @@ void FullyConnectedLayer::bprop(Tensor ** dev_input_grad_,
   // 						 eta);
   
   //update weights for current layer
-  dim3 dimGrid(num_images * b_in, t_in, b_out);
+  dim3 dimGrid(b_in, t_in, b_out);
   dim3 dimBlock(t_out);
   cudaFCLayerBprop2Kernel<<<dimGrid, dimBlock>>>(dev_weights->data,
   						 dev_last_input->data,
