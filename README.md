@@ -31,9 +31,7 @@ We implement the following layers:
 ## Results
 _______
 
-We test our performance on the MNIST dataset. Our following architecture achieves accuracy.
-
-The vanilla cpu version achieves ~80% accuracy at convergence, while a simple 3 layer (convolution->pooling->fully connected) gpu network achieves ~95% accuracy. It also trains much faster [numbers needed].
+We test our performance on the MNIST dataset. The vanilla cpu version achieves ~80% accuracy at convergence, while a simple 3 layer (convolution->pooling->fully connected) gpu network achieves ~95% accuracy. It also trains much faster [numbers needed].
 
 Output for `batch_size = 1`
 ```
