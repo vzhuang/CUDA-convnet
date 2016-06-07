@@ -177,11 +177,10 @@ void testGPU4(Tensor * X_train, Tensor * Y_train) {
   // Train
   const float eta = 0.01;
   const int num_epochs = 100;
-  const int num_batches = TRAIN_SIZE/1;
+  const int num_batches = TRAIN_SIZE;
   const int batch_size = 1;
-  const int train_size = num_batches * batch_size;
   
-  cnet.train(eta, num_epochs, num_batches, batch_size, train_size);
+  cnet.train(eta, num_epochs, num_batches, batch_size, TRAIN_SIZE);
   
 }
 void testGPU5(Tensor * X_train, Tensor * Y_train) {
@@ -204,11 +203,10 @@ void testGPU5(Tensor * X_train, Tensor * Y_train) {
   ConvNet cnet = ConvNet(layers, num_layers, dev_X_train, dev_Y_train);
 
   // Train
-  const float eta = 0.01;
+  const float eta = 0.05;
   const int num_epochs = 100;
-  const int num_batches = TRAIN_SIZE/20;
-  const int batch_size = 20;
-  const int train_size = num_batches * batch_size;
+  const int num_batches = TRAIN_SIZE/10;
+  const int batch_size = 10;
 
   cnet.train(eta, num_epochs, num_batches, batch_size, TRAIN_SIZE);
 }
