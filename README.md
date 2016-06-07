@@ -1,6 +1,6 @@
 # CUDA-convnet
 
-CUDA/C++ CNN (convolutional neural network) implementation using CUDA/cuBLAS.
+CUDA/C++ CNN (convolutional neural network) implementation using cuBLAS.
 
 ## Usage
 _____
