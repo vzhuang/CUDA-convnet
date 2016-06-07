@@ -162,7 +162,8 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size,
       }
 
       // CALCULATE ERRORS (populate errors[num_layers])
-      cudaMemcpy(dev_indices, indices, sizeof(int) * batch_size, cudaMemcpyHostToDevice);
+      cudaMemcpy(dev_indices, indices, sizeof(int) * batch_size,
+		 cudaMemcpyHostToDevice);
       cudaGetErrorKernel<<<1, batch_size, batch_size * sizeof(int)>>>(
           input[num_layers]->data, 
           dev_indices, 
