@@ -25,11 +25,11 @@ ____________
 We implement the following layers:
 
 * convolution layers
-..* hard padding
-..* arbitrary stride, number of filters
+  * hard padding
+  * arbitrary stride, number of filters
 * max-pooling layers
 * fully connected layers
-..* supports arbitrary number of neurons
+  * supports arbitrary number of neurons
 
 ## Results
 _______
@@ -61,7 +61,7 @@ Epoch loss: 0.04765
 Epoch loss: 0.0466833
 ```
 
-Output for `batch_size = 10`
+Output for `batch_size = 10`, 100 batches (not fully converged yet)
 ```
 Layer 0: 10 x 1 x 28 x 28 --> 10 x 10 x 14 x 14
 Layer 1: 10 x 10 x 14 x 14 --> 10 x 10 x 7 x 7
