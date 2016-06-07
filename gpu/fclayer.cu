@@ -56,57 +56,43 @@ void cudaFCLayerBprop1Kernel(float * dev_input_grad_data,
 
 // computes weight gradients and applies SGD updates
 __global__
-void cudaFCLayerBprop2Kernel(float * dev_weights_data,			     
-			     float * dev_last_input_data,
-			     float * dev_output_grad_data,
-			     int output_neurons,
-			     int input_neurons,
-			     int num_images,
-			     float eta) {
-  int image_id = blockIdx.x / (blockDim.x / num_images);
-  int block_id = blockIdx.x / num_images;
-  int in_ind = block_id * blockDim.x + blockIdx.y;  
-  int out_ind = blockIdx.z * blockDim.z + threadIdx.x;
+void cudaFCLayerBprop2Kernel(float * dev_weights_data,           
+           float * dev_last_input_data,
+           float * dev_output_grad_data,
+           int output_neurons,
+           int input_neurons,
+           int num_images,
+           float eta) 
+{
+  int input_id = blockIdx.x;
+  int neuron_id = threadIdx.x;
+
+  int weight_index = input_id * output_neurons + neuron_id;
 
   float c = eta / num_images;
-  int weight_index = in_ind * output_neurons + out_ind;
-  if(in_ind < input_neurons && out_ind < output_neurons) {
-    // update appropriate weight with activation in prev_input_data
-    dev_weights_data[weight_index] -= c * dev_last_input_data[image_id * input_neurons + in_ind] * dev_output_grad_data[image_id * output_neurons + out_ind];
-    // dev_weights_data[weight_index] -= eta * dev_last_input_data[in_ind] * dev_output_grad_data[out_ind];
-    
+  for (int i = 0; i < num_images; i++) {
+    int input_index = i * input_neurons + input_id;
+    int output_index = i * output_neurons + neuron_id;
+
+    dev_weights_data[weight_index] -= c * dev_last_input_data[input_index] * dev_output_grad_data[output_index];
   }
-
-  // int image_id = blockIdx.x;
-  // int in_ind = blockIdx.y;  
-  // int out_ind = threadIdx.x;
-
-  // float c = eta / num_images;
-  // int weight_index = in_ind * output_neurons + out_ind;
-  // if(in_ind < input_neurons && out_ind < output_neurons) {
-  //   // update appropriate weight with activation in prev_input_data
-  //   dev_weights_data[weight_index] -= c * dev_last_input_data[image_id * input_neurons + in_ind] * dev_output_grad_data[image_id * output_neurons + out_ind];
-    
-  //   // dev_weights_data[weight_index] -= eta * dev_last_input_data[in_ind] * dev_output_grad_data[out_ind] / num_images;   
-    
-  // }
 }
 
 // computes bias gradients and applies SGD updates
 __global__
-void cudaFCLayerBprop3Kernel(float * dev_output_grad_data,
-			     float * dev_biases_data,
-			     int num_images,
-			     int num_neurons,
-			     float eta) {
-  int ind = blockIdx.x * blockDim.x + threadIdx.x;
+void cudaFCLayerBprop3Kernel(
+           float * dev_output_grad_data,
+           float * dev_biases_data,
+           int num_images,
+           int num_neurons,
+           float eta) 
+{
+  int neuron_id = threadIdx.x;
+
   float c = eta / num_images;
-  if (ind < num_neurons) {
-    // TODO: check output grad and biases are structured identically
-    for (int i = 0; i < num_images; i++) {
-      int ind2 = ind + i * num_neurons;
-      dev_biases_data[ind] -= c * dev_output_grad_data[ind2];
-    }
+  for (int i = 0; i < num_images; i++) {
+    int output_index = i * num_neurons + neuron_id;
+    dev_biases_data[neuron_id] -= c * dev_output_grad_data[output_index];
   }
   
 }
@@ -164,11 +150,6 @@ void FullyConnectedLayer::bprop(Tensor ** dev_input_grad_,
 {
   int num_images = dev_input_grad->dims.num_images;
 
-
-  int b_in = input_dim / 1024 + 1;
-  int t_in = 1024;
-  int b_out = num_neurons / 1024 + 1;
-  int t_out = 1024;
   
   // Setup dev_B for cuBLAS
   float **B;
@@ -204,20 +185,9 @@ void FullyConnectedLayer::bprop(Tensor ** dev_input_grad_,
 						     dev_last_input->data,
 						     num_neurons);
 
-  // dim3 dimGrid(num_images, input_dim);
-  // dim3 dimBlock(num_neurons);
-  // cudaFCLayerBprop2Kernel<<<dimGrid, dimBlock>>>(dev_weights->data,
-  // 						 dev_last_input->data,
-  // 						 dev_output_grad_->data,
-  // 						 num_neurons,
-  // 						 input_dim,
-  // 						 num_images,
-  // 						 eta);
-  
   //update weights for current layer
-  dim3 dimGrid(num_images * b_in, t_in, b_out);
-  dim3 dimBlock(t_out);
-  cudaFCLayerBprop2Kernel<<<dimGrid, dimBlock>>>(dev_weights->data,
+  cudaFCLayerBprop2Kernel<<<input_dim, num_neurons>>>(
+               dev_weights->data,
   						 dev_last_input->data,
   						 dev_output_grad_->data,
   						 num_neurons,
@@ -226,7 +196,8 @@ void FullyConnectedLayer::bprop(Tensor ** dev_input_grad_,
   						 eta);
   
   // update biases for current layer
-  cudaFCLayerBprop3Kernel<<<b_out, t_out>>>(dev_output_grad_->data,
+  cudaFCLayerBprop3Kernel<<<1, num_neurons>>>(
+              dev_output_grad_->data,
 					    dev_biases->data,
 					    num_images,
 					    num_neurons,
