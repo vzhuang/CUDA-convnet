@@ -25,16 +25,16 @@ ____________
 We implement the following layers:
 
 * convolution layers
-** hard padding
-** arbitrary stride, number of filters
+..* hard padding
+..* arbitrary stride, number of filters
 * max-pooling layers
 * fully connected layers
-** supports arbitrary number of neurons
+..* supports arbitrary number of neurons
 
 ## Results
 _______
 
-We test our performance on the MNIST dataset. The vanilla cpu version achieves ~80% accuracy at convergence, while a simple 3 layer (convolution->pooling->fully connected) gpu network achieves ~95% accuracy. It also trains much faster [numbers needed].
+We test our performance on the [MNIST dataset](http://yann.lecun.com/exdb/mnist/). The vanilla cpu version achieves ~80% accuracy at convergence, while a simple 3 layer (convolution->pooling->fully connected) gpu network achieves ~95% accuracy. It also trains much faster compared to the CPU version, running through the entire dataset of 60,000 points in ~4 seconds.
 
 Output for `batch_size = 1`
 ```
