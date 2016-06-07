@@ -9,7 +9,6 @@
 #include <iostream>
 
 
-
 // TODO: currently hard coded as sigmoid
 __device__ float activ(float val) {
   return 1.0 / (1.0 + expf(-val));

@@ -43,8 +43,8 @@ all: $(TARGETS)
 cnn: main.o convnet.o convlayer.o fclayer.o poolinglayer.o tensor.o load.o utils.o
 	$(CC) $< -o $@ convnet.o convlayer.o fclayer.o poolinglayer.o tensor.o load.o utils.o -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH) -fopenmp -lcurand -lcublas
 
-convnet.o: convnet.cpp
-	$(CC) -std=c++11 -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH) -o $@ -c $<
+convnet.o: convnet.cu
+	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $<
 
 main.o: main.cpp
 	$(CC) -std=c++11 -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH) -o $@ -c $<

@@ -108,7 +108,8 @@ void ConvNet::free_mem() {
  * num_batches: number of batches to run
  * batch_size: number of data_points in each batch
  */
-void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size)
+void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size,
+		    int train_size)  
 {
   // Allocate memory for both fprop and bprop
   init_mem(batch_size);
@@ -156,10 +157,10 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size)
           errors[num_layers]->data,
           dev_indices, 
           dev_Y_train->data, 
-          dev_loss);
+          dev_loss);      
       int loss = 0;
       cudaMemcpy(&loss, dev_loss, sizeof(int), cudaMemcpyDeviceToHost);
-      epoch_loss += loss;
+      epoch_loss += (float) loss / train_size;
 
       // Bprop all layers
       for (int l = num_layers - 1; l >= 0; l--)

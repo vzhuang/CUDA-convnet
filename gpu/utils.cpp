@@ -53,4 +53,3 @@ Tensor * toCPU(Tensor * dev_t) {
   cudaMemcpy(t->data, dev_t->data, data_size, cudaMemcpyDeviceToHost);
   return t;
 }
-
