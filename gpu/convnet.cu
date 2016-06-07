@@ -168,7 +168,7 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size,
     } 
 
     // Display loss
-    std::cout << "Epoch loss: " << epoch_loss / (num_batches * batch_size) << std::endl; 
+    std::cout << "Epoch loss: " << epoch_loss << std::endl; 
 
     // Display sample FOR DEBUG
     int k = 0;

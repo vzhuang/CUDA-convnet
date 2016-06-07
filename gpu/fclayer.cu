@@ -73,7 +73,7 @@ void cudaFCLayerBprop2Kernel(float * dev_weights_data,
   int weight_index = in_ind * output_neurons + out_ind;
   if(in_ind < input_neurons && out_ind < output_neurons) {
     // update appropriate weight with activation in prev_input_data
-    dev_weights_data[weight_index] -= eta * dev_last_input_data[in_ind] * dev_output_grad_data[out_ind];           
+    dev_weights_data[weight_index] -= eta * dev_last_input_data[in_ind] * dev_output_grad_data[out_ind] / num_images;           
   }
 }
 
@@ -89,10 +89,8 @@ void cudaFCLayerBprop3Kernel(float * dev_output_grad_data,
     // TODO: check output grad and biases are structured identically
     for (int i = 0; i < num_images; i++) {
       int ind2 = ind + i * num_neurons;
-      dev_biases_data[ind] -= eta * dev_output_grad_data[ind2];
+      dev_biases_data[ind] -= eta * dev_output_grad_data[ind2] / num_images;
     }
-
-    dev_biases_data[ind] /= num_images;
   }  
 }
 
