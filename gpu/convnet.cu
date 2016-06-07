@@ -9,10 +9,12 @@
 
 // get errors
 __global__
-void cudaGetErrorKernel(float * dev_output_data,
-			int * indices,
-			float * dev_Y_data,
-			int * dev_loss) 
+void cudaGetErrorKernel(
+           float * dev_output_data,
+           float * dev_error_data,
+           int * indices,
+           float * dev_Y_data,
+           int * dev_loss) 
 {
   extern __shared__ int loss[];
 
@@ -28,7 +30,7 @@ void cudaGetErrorKernel(float * dev_output_data,
       max_ind = i;
     }
 
-    dev_output_data[ind * 10 + i] -= dev_Y_data[y_ind * 10 + i];
+    dev_error_data[ind * 10 + i] = val - dev_Y_data[y_ind * 10 + i];
   }
 
   if (dev_Y_data[y_ind * 10 + max_ind] != 1)
@@ -111,9 +113,12 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size,
 {
   // Allocate memory for both fprop and bprop
   init_mem(batch_size);
-
+  
   // Memory to store training indices and loss
   int * indices = new int[batch_size];
+  Tensor ** input = new Tensor*[num_layers + 1];
+  Tensor ** errors = new Tensor*[num_layers + 1];
+  errors[num_layers] = new Tensor(batch_size, 1, 10, 1, true);
   int * dev_indices;
   int * dev_loss;
   cudaMalloc((void **)&dev_indices, sizeof(int) * batch_size);
@@ -121,7 +126,7 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size,
 
   // Size of a training image (in floats), number of training images
   const int image_size = dev_X_train->dims.num_channels * dev_X_train->dims.rows * dev_X_train->dims.cols;
-  
+
   // Actual training
   int trainingindex = 0;
   for (int epoch = 0; epoch < num_epochs; epoch++) {
@@ -139,33 +144,18 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size,
         trainingindex++;
         trainingindex %= dev_X_train->dims.num_images;
       }
-      // printf("%d\n", trainingindex);
-
-      // Variables to store all the pointers
-      Tensor ** input = new Tensor*[num_layers + 1];
-      Tensor ** errors = new Tensor*[num_layers + 1];
-      //Tensor * temp;
-
-      // Display X (input)
-      // temp = toCPU(dev_X_in);
-      // print(temp, 3, 0);
 
       // Fprop all layers
       input[0] = dev_X_in;
-      // printf("\nFPROP\n\n");
-      for (int l = 0; l < num_layers; l++) {
+      for (int l = 0; l < num_layers; l++)
         layers[l]->fprop(input[l], &input[l+1]);
-
-        // Visualize
-        // temp = toCPU(input[l+1]);
-        // print(temp, 3, 0);
-      }
 
       // CALCULATE ERRORS (populate errors[num_layers])
       cudaMemcpy(dev_indices, indices, sizeof(int) * batch_size,
 		 cudaMemcpyHostToDevice);
       cudaGetErrorKernel<<<1, batch_size, batch_size * sizeof(int)>>>(
-          input[num_layers]->data, 
+          input[num_layers]->data,
+          errors[num_layers]->data,
           dev_indices, 
           dev_Y_train->data, 
           dev_loss);      
@@ -174,23 +164,53 @@ void ConvNet::train(float eta, int num_epochs, int num_batches, int batch_size,
       epoch_loss += (float) loss / train_size;
 
       // Bprop all layers
-      errors[num_layers] = input[num_layers];
-      // printf("\nBPROP\n\n");
-      for (int l = num_layers - 1; l >= 0; l--) {
+      for (int l = num_layers - 1; l >= 0; l--)
         layers[l]->bprop(&errors[l], errors[l+1], eta);
-
-        // Visualize
-        // temp = toCPU(errors[l]);
-        // print(temp, 3, 0);
-      }
     } 
 
-    std::cout << "Epoch loss: " << epoch_loss << std::endl;   
+    // Display loss
+    std::cout << "Epoch loss: " << epoch_loss / (num_batches * batch_size) << std::endl; 
+
+    // Display sample FOR DEBUG
+    int k = 0;
+    assert(k < batch_size);
+    Tensor * temp;
+
+    // printf("\nINPUT\n\n");
+    // temp = toCPU(dev_X_in);
+    // print(temp, k, 0);
+
+    // printf("\nFPROP\n\n");
+    // for (int l = 0; l < num_layers; l++) {
+    //   temp = toCPU(input[l+1]);
+    //   print(temp, k, 0);
+    // }  
+
+    // printf("\nERRORS\n\n");
+    // temp = toCPU(errors[num_layers]);
+    // print(temp, k, 0);
+
+    // printf("\nBPROP\n\n");
+    // for (int l = num_layers - 1; l >= 0; l--) {
+    //   temp = toCPU(errors[l]);
+    //   print(temp, k, 0);
+    // }
+
+    // printf("\nWEIGHTS\n\n");
+    // temp = toCPU(((FullyConnectedLayer *)layers[1])->dev_weights);
+    // print(temp, 0, 0);
+    // print(temp, 0, 1);
+    // temp = toCPU(((FullyConnectedLayer *)layers[0])->dev_weights);
+    // print(temp, 0, 0);
+    // print(temp, 0, 1);
   }
 
 
   // Free everything
   delete indices;
+  delete input;
+  delete errors[num_layers];
+  delete errors;
   cudaFree(dev_indices);
   cudaFree(dev_loss);
   free_mem();

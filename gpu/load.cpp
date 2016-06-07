@@ -17,7 +17,7 @@ Tensor * load_X(std::string filename, int SIZE) {
   // Copy to X
   Tensor * X = new Tensor(SIZE, 1, DIM, DIM, false);
   for (int n = 0; n < SIZE * DIM * DIM; n++) 
-    X->data[n] = (float) buffer[n + 16];
+    X->data[n] = ((float) buffer[n + 16]) / 255.0;  // Normalize 0-255 to 0-1
 
   delete buffer;
   return X;
