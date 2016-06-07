@@ -34,7 +34,7 @@ We implement the following layers:
 ## Results
 _______
 
-We test our performance on the [MNIST dataset](http://yann.lecun.com/exdb/mnist/). The vanilla cpu version achieves ~80% accuracy at convergence, while a simple 3 layer (convolution->pooling->fully connected) gpu network achieves ~95% accuracy. It also trains much faster compared to the CPU version, running through the entire dataset of 60,000 points in ~4 seconds.
+We test our performance on the [MNIST dataset](http://yann.lecun.com/exdb/mnist/). The vanilla cpu version achieves ~80% accuracy at convergence, while a simple 3 layer (convolution->pooling->fully connected) gpu network achieves 96%+ accuracy. It also trains much faster compared to the CPU version. While the CPU version takes ~50 seconds to run through the entire dataset of 60,000 points, the GPU version does it in ~4 seconds.
 
 Output for `batch_size = 1`
 ```
